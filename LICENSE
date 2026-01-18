@@ -1,0 +1,74 @@
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+                            TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+         and distribution as defined by this document.
+
+      "Licensor" shall mean the copyright owner or entity授权
+
+      "Legal Entity" shall mean union of the Licensor及其关联
+
+      "You" (或 "Your")：指根据本授权获得许可的自然人或法人
+
+      "Convey" 指通过任何方式获得本程序副本的权利
+
+      "Modifications"指对作品的任何修改、派生或合并
+
+   2. 授权许可
+
+     Copyright © 2025 Geofence-Updater-Lite contributors
+
+   根据 Apache License 2.0，许可人特此授予你永久性、全球性、非排他性许可
+
+   2.1. 授权
+      许可人特此授予你：
+      - 使用、复制、修改、合并、发布、分发、再许可
+      -  sublicense 或再许可
+      伴随适当声明归属的许可
+
+   2.2. 条款
+      但你必须遵守以下条款：
+      - 保留所有版权、专利、商标和归属声明
+      - 如果修改了文件，需要在文件中注明
+      - 不得使用许可人的商标背书（除非有明确许可）
+      - 本许可证不授予使用许可人商标的权利
+
+   2.3. 专利授权
+      许可人特此授予你专利使用许可，用于：
+      - 使用本程序
+      - 修改本程序
+          - 分发本程序
+          - 再许可
+
+   2.4. 再许可
+      如果你再许可本程序：
+      - 必须保留本许可证声明
+      - 必须保留所有版权、专利、商标和归属声明
+      - 不得使用许可人商标背书
+
+   2.5. 免责声明
+      本软件按"原样"提供，不提供任何形式的保证。
+
+   3. 许可终止
+
+   如果你违反本许可证的任何条款，许可将自动终止。
+
+   4. 条款
+
+   4.1. 再许可
+      你可以自由地再许可本程序。
+
+   5. 禁止使用
+
+   本软件受美国出口管制法律管辖，可能受到加密软件的进口限制。
+
+   6. 标记声明
+
+   你必须在分发时保留所有版权、专利、商标和归属声明。
+
+   详见：https://www.apache.org/licenses/LICENSE-2.0

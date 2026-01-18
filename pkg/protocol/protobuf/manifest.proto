@@ -1,0 +1,75 @@
+// Protocol buffer definition for Geofence Manifest
+// This file defines the binary format for the version manifest
+
+syntax = "proto3";
+
+package gul.protocol.v1;
+
+option go_package = "github.com/iannil/geofence-updater-lite/pkg/protocol/protobuf";
+
+// Manifest represents the current state of the geofence database
+// This is the small file that clients poll frequently to check for updates
+message Manifest {
+  // Monotonically increasing version number
+  uint64 version = 1;
+
+  // Unix timestamp when this manifest was created
+  int64 timestamp = 2;
+
+  // Merkle tree root hash for integrity verification
+  bytes root_hash = 3;
+
+  // URL path for delta update from previous version
+  // Relative to CDN base URL, e.g., "/patches/v1023_to_v1024.bin"
+  string delta_url = 4;
+
+  // URL path for full snapshot download
+  // For new devices or when client is too far behind
+  string snapshot_url = 5;
+
+  // Size of delta file in bytes (for clients to estimate download)
+  uint64 delta_size = 6;
+
+  // Size of snapshot file in bytes
+  uint64 snapshot_size = 7;
+
+  // Hash of delta file (SHA-256) for download verification
+  bytes delta_hash = 8;
+
+  // Hash of snapshot file (SHA-256) for download verification
+  bytes snapshot_hash = 9;
+
+  // Minimum supported client version
+  // Clients below this version must update before fetching new data
+  uint32 min_client_version = 10;
+
+  // Human-readable message about this update
+  string message = 11;
+
+  // Signature of the manifest (Ed25519)
+  // Computed over all fields except this signature field
+  bytes signature = 12;
+
+  // Public key ID that can verify this signature
+  string key_id = 13;
+}
+
+// ManifestRequest is used for querying specific manifest versions
+message ManifestRequest {
+  // Request specific version (0 = latest)
+  uint64 version = 1;
+
+  // Current client version (for server-side compatibility check)
+  uint32 client_version = 2;
+}
+
+// ManifestResponse wraps a manifest with additional metadata
+message ManifestResponse {
+  Manifest manifest = 1;
+
+  // CDN base URL for resolving relative paths
+  string cdn_base_url = 2;
+
+  // Indicates if a delta is available from the specified version
+  bool delta_available = 3;
+}

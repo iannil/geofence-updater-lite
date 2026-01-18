@@ -1,0 +1,103 @@
+run:
+  timeout: 5m
+  go: '1.23'
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - revive
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - errcheck
+    - gosec
+    - gocritic
+    - goimports
+    - misspell
+    - exportloopref
+    - nilerr
+    - noctx
+    - prealloc
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - shadow
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+
+  gosec:
+    excludes:
+      - G104  # Errors unhandled
+      - G307  # Deferring file close without checking
+
+  goimports:
+    local-prefixes: github.com/iannil/geofence-updater-lite
+
+  misspell:
+    locale: US
+
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocritic
+        - errcheck
+        - gosec
+        - govet
+
+    # Exclude some staticcheck messages
+    - linters:
+        - staticcheck
+      text: "SA9003:"
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true

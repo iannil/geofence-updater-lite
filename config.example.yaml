@@ -1,0 +1,18 @@
+# 示例配置文件
+# 将此文件重命名为 config.yaml 并放在项目根目录
+
+# 客户端配置
+client:
+  manifest_url: "https://cdn.example.com/geofence/manifest.json"
+  public_key_hex: "0000000000000000000000000000000000000000000000000000000000000000000000"  # 测试公钥，请替换为实际公钥
+  store_path: "./geofence.db"
+  sync_interval: 1m
+  http_timeout: 30s
+  max_download_size: 104857600  # 100 MB
+
+# 发布者配置
+publisher:
+  private_key_hex: ""  # 填写私钥（十六进制）
+  key_id: "key-001"  # 可选，用于标识密钥
+  output_dir: "./output"
+  cdn_base_url: "https://cdn.example.com/geofence"

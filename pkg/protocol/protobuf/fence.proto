@@ -1,0 +1,125 @@
+// Protocol buffer definition for Geofence Fence Items
+// This file defines the binary format for individual geofence restrictions
+
+syntax = "proto3";
+
+package gul.protocol.v1;
+
+option go_package = "github.com/iannil/geofence-updater-lite/pkg/protocol/protobuf";
+
+// FenceType defines the category of the geofence restriction
+enum FenceType {
+  FENCE_TYPE_UNKNOWN = 0;
+  // Temporary restriction for events, emergency response, etc.
+  FENCE_TYPE_TEMP_RESTRICTION = 1;
+  // Permanent no-fly zone (airports, military bases, etc.)
+  FENCE_TYPE_PERMANENT_NO_FLY = 2;
+  // Altitude restriction (max height limit)
+  FENCE_TYPE_ALTITUDE_LIMIT = 3;
+  // Minimum altitude requirement (e.g., stay above certain height)
+  FENCE_TYPE_ALTITUDE_MINIMUM = 4;
+  // Speed restriction zone
+  FENCE_TYPE_SPEED_LIMIT = 5;
+}
+
+// Geometry defines the spatial shape of the fence
+message Geometry {
+  oneof shape {
+    // Polygon defined by ordered list of points
+    Polygon polygon = 1;
+    // Circle defined by center point and radius in meters
+    Circle circle = 2;
+    // Bounding box (min_lat, min_lon, max_lat, max_lon)
+    BoundingBox bbox = 3;
+  }
+}
+
+// Polygon represents a closed shape defined by vertices
+message Polygon {
+  // Coordinates in [latitude, longitude] pairs
+  // Lat/Lon in degrees (WGS84)
+  repeated Point coordinates = 1;
+}
+
+// Circle represents a circular geofence
+message Circle {
+  Point center = 1;
+  // Radius in meters
+  double radius_meters = 2;
+}
+
+// Point represents a single coordinate
+message Point {
+  double latitude = 1;   // Degrees, -90 to 90
+  double longitude = 2;  // Degrees, -180 to 180
+}
+
+// BoundingBox represents a rectangular area
+message BoundingBox {
+  double min_lat = 1;
+  double min_lon = 2;
+  double max_lat = 3;
+  double max_lon = 4;
+}
+
+// FenceItem represents a single geofence restriction
+// This is the core data unit that gets signed and distributed
+message FenceItem {
+  // Unique identifier for this fence
+  string id = 1;
+
+  // Type of restriction
+  FenceType type = 2;
+
+  // Spatial definition
+  Geometry geometry = 3;
+
+  // Time validity window (Unix timestamps)
+  // Use protobuf well-known types for better compatibility
+  int64 start_ts = 4;  // Unix timestamp in seconds
+  int64 end_ts = 5;    // Unix timestamp in seconds, 0 means no expiry
+
+  // Priority level (higher = more important)
+  // When multiple fences overlap, the highest priority wins
+  uint32 priority = 6;
+
+  // For altitude restrictions: max height in meters (0 = no limit)
+  uint32 max_altitude_meters = 7;
+
+  // For speed restrictions: max speed in m/s (0 = no limit)
+  uint32 max_speed_mps = 8;
+
+  // Human-readable description
+  string name = 9;
+  string description = 10;
+
+  // Ed25519 signature of all above fields
+  // The signature is computed over the serialized protobuf message
+  // without this signature field included
+  bytes signature = 11;
+
+  // Public key ID that can verify this signature
+  string key_id = 12;
+}
+
+// FenceCollection represents a batch of fence items
+// Used for snapshot files and delta updates
+message FenceCollection {
+  repeated FenceItem items = 1;
+
+  // Collection metadata
+  int64 created_ts = 2;
+  string version = 3;
+}
+
+// FenceDelta represents changes between two versions
+message FenceDelta {
+  // Fences to add
+  repeated FenceItem added = 1;
+
+  // IDs of fences to remove
+  repeated string removed_ids = 2;
+
+  // Fences to update (new version replaces old)
+  repeated FenceItem updated = 3;
+}

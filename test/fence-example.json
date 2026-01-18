@@ -1,0 +1,19 @@
+{
+  "id": "beijing-3rd-ring",
+  "type": "TEMP_RESTRICTION",
+  "geometry": {
+    "polygon": [
+      {"lat": 39.9042, "lon": 116.4074},
+      {"lat": 39.9042, "lon": 116.4174},
+      {"lat": 39.9142, "lon": 116.4174},
+      {"lat": 39.9142, "lon": 116.4074}
+    ]
+  },
+  "start_ts": 1709880000,
+  "end_ts": 1709990000,
+  "priority": 100,
+  "max_alt_m": 0,
+  "max_speed_mps": 0,
+  "name": "北京三环禁飞区",
+  "description": "临时管控区域"
+}
