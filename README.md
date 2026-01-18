@@ -1,5 +1,7 @@
 # Geofence-Updater-Lite (GUL)
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 <div align="center">
 
 ![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)
@@ -7,94 +9,94 @@
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)
 
-**一个轻量级、高可靠的地理围栏数据同步系统**
+**A lightweight, highly reliable geofence data synchronization system**
 
-专为无人机/无人驾驶飞行器在低带宽、不稳定网络环境下运行而设计
+Designed for drones/UAVs operating in low-bandwidth, unstable network environments
 
-[功能特性](#功能特性) • [快速开始](#快速开始) • [使用指南](#使用指南) • [API 文档](#api-文档) • [协议规范](#协议规范)
+[Features](#features) • [Quick Start](#quick-start) • [Usage Guide](#usage-guide) • [API Documentation](#api-documentation) • [Protocol Specification](#protocol-specification)
 
 </div>
 
 ---
 
-## 项目简介
+## Overview
 
-Geofence-Updater-Lite (GUL) 是一个去中心化的地理围栏数据同步系统，核心设计理念是通过 **Merkkle Tree 实现增量更新**，将版本差异压缩至几 KB，使其能够在 GPRS 级别的网络环境中稳定运行。
+Geofence-Updater-Lite (GUL) is a decentralized geofence data synchronization system. The core design philosophy uses **Merkle Tree for incremental updates**, compressing version differences to just a few KB, enabling stable operation on GPRS-level networks.
 
-**核心特性：**
+**Core Features:**
 
-- **极低带宽** - 使用 Merkle Tree + 二进制差分，增量更新仅需几 KB
-- **去中心化分发** - 纯静态文件，可部署在任意 CDN/OSS，零服务器成本
-- **安全优先** - Ed25519 数字签名，离线验证，防篡改
-- **高性能查询** - 基于 R-Tree 空间索引，毫秒级围栏检查
-- **跨平台** - 纯 Go 实现，支持 Linux/macOS/Windows
-
----
-
-## 功能特性
-
-| 特性 | 说明 |
-|------|------|
-| **极低带宽** | Merkle Tree 实现增量更新，版本差异可能只有几 KB |
-| **去中心化分发** | 核心数据为静态文件，可部署在 CDN/OSS/IPFS |
-| **数字签名** | Ed25519 签名 + KeyID 机制，防篡改验证 |
-| **高性能查询** | 基于 R-Tree 空间索引，毫秒级围栏检查 |
-| **离线验签** | 内置公钥验证，不依赖数据来源 |
-| **版本回滚保护** | 拒绝应用旧版本数据 |
-| **进度回调** | 大文件下载支持进度报告 |
-| **易集成** | 纯 Go 实现，跨平台编译支持 |
+- **Ultra-Low Bandwidth** - Merkle Tree + binary delta, incremental updates only require a few KB
+- **Decentralized Distribution** - Pure static files, deployable on any CDN/OSS, zero server cost
+- **Security-First** - Ed25519 digital signatures, offline verification, tamper-proof
+- **High-Performance Queries** - R-Tree spatial indexing, millisecond-level geofence checks
+- **Cross-Platform** - Pure Go implementation, supports Linux/macOS/Windows
 
 ---
 
-## 架构设计
+## Features
 
-### 核心原则
+| Feature | Description |
+| --------- | ------------- |
+| **Ultra-Low Bandwidth** | Merkle Tree enables incremental updates with version differences as small as a few KB |
+| **Decentralized Distribution** | Core data is static files, deployable on CDN/OSS/IPFS |
+| **Digital Signatures** | Ed25519 signatures + KeyID mechanism for tamper-proof verification |
+| **High-Performance Queries** | R-Tree spatial indexing for millisecond-level geofence checks |
+| **Offline Verification** | Built-in public key verification, independent of data source |
+| **Version Rollback Protection** | Rejects applying older version data |
+| **Progress Callbacks** | Large file downloads support progress reporting |
+| **Easy Integration** | Pure Go implementation with cross-platform compilation support |
+
+---
+
+## Architecture
+
+### Core Principles
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Git 思想                                    │
-│              Merkle Tree 管理版本，只下载差异                    │
+│                     Git Philosophy                              │
+│              Merkle Tree manages versions, download diffs only   │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
-│                     CDN 友好                                    │
-│              纯静态文件，可部署在任意 CDN/OSS                    │
+│                     CDN Friendly                                │
+│              Pure static files, deployable on any CDN/OSS       │
 └─────────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────┐
-│                     安全优先                                    │
-│              Ed25519 签名，离线验证，防篡改                      │
+│                     Security-First                              │
+│              Ed25519 signatures, offline verification           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 双组件架构
+### Dual-Component Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                                                                       │
-│                        服务端 (Publisher)                            │
-│                      CLI 工具 / Web 后台                             │
+│                        Server (Publisher)                            │
+│                      CLI Tool / Web Backend                          │
 │                                                                       │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │
-│  │ 围栏数据  │  │ Merkle   │  │  Delta   │  │ Snapshot │  │  签名   │ │
-│  │  输入    │  │  Tree    │  │  Patch   │  │   文件   │  │  生成   │ │
+│  │  Fence   │  │ Merkle   │  │  Delta   │  │ Snapshot │  │   Sign  │ │
+│  │  Input   │  │  Tree    │  │  Patch   │  │   File   │  │ Generate│ │
 │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬────┘ │
 │       │           │           │           │              │        │   │
 │       ▼           ▼           ▼           ▼              ▼        ▼   │
 │   ┌─────────────────────────────────────────────────────────────────┐ │
-│   │              静态文件存储 (CDN/OSS/IPFS)                         │ │
+│   │              Static File Storage (CDN/OSS/IPFS)                  │ │
 │   │  manifest.json │  v1.bin  │  v1_v2.delta  │  v2.snapshot.bin   │ │
 │   └─────────────────────────────────────────────────────────────────┘ │
 │                                                                       │
 └──────────────────────────────────────────────────────────────────────┘
                                     │
-                                    │ HTTP 轮询
+                                    │ HTTP Polling
                                     ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│                        客户端 (Drone SDK)                            │
-│                      运行在无人机 / 遥控器 APP                        │
+│                        Client (Drone SDK)                            │
+│                   Runs on Drone / Controller APP                     │
 │                                                                       │
 │  ┌────────────────────────────────────────────────────────────────┐  │
-│  │  HTTP 客户端   │  同步逻辑  │  SQLite  │  R-Tree  │  签名验证  │  │
-│  │  (下载/重试)   │  (轮询)   │  (持久化) │ (查询)  │  (离线)    │  │
+│  │  HTTP Client   │ Sync Logic │  SQLite  │  R-Tree  │  Signature │  │
+│  │  (Download/Retry)│ (Polling) │ (Persist)│ (Query) │ Verification│  │
 │  └────────────────────────────────────────────────────────────────┘  │
 │                                                                       │
 │                         API: Check(lat, lon) → Allowed?              │
@@ -103,80 +105,81 @@ Geofence-Updater-Lite (GUL) 是一个去中心化的地理围栏数据同步系�
 
 ---
 
-## 快速开始
+## Quick Start
 
-### 前置要求
+### Prerequisites
 
-- **Go 1.25+** （推荐使用最新稳定版本）
-- **Make** （可选，用于便捷构建）
-- **Docker** （可选，用于容器化部署）
+- **Go 1.25+** (latest stable version recommended)
+- **Make** (optional, for convenient builds)
+- **Docker** (optional, for containerized deployment)
 
-### 安装
+### Installation
 
-#### 方式一：从源码构建
+#### Method 1: Build from Source
 
 ```bash
-# 克隆仓库
+# Clone repository
 git clone https://github.com/iannil/geofence-updater-lite.git
 cd geofence-updater-lite
 
-# 下载依赖
+# Download dependencies
 go mod download
 
-# 构建所有二进制文件
+# Build all binaries
 make build-all
 
-# 或仅构建发布工具
+# Or build only the publisher tool
 make build
 ```
 
-构建产物位于 `bin/` 目录：
-- `publisher` - 发布工具（服务端）
-- `sdk-example` - SDK 使用示例（客户端）
+Build artifacts are located in the `bin/` directory:
 
-#### 方式二：Docker 构建
+- `publisher` - Publisher tool (server)
+- `sdk-example` - SDK usage example (client)
+
+#### Method 2: Docker Build
 
 ```bash
-# 构建镜像
+# Build image
 docker build -t gul-publisher .
 
-# 运行容器
+# Run container
 docker run -it --rm -v $(pwd)/data:/data gul-publisher
 ```
 
-#### 方式三：交叉编译
+#### Method 3: Cross-Compilation
 
 ```bash
-# 为多个平台构建
+# Build for multiple platforms
 make cross-compile
 ```
 
-### 基本使用流程
+### Basic Usage
 
-**1. 生成密钥对**
+**1. Generate Key Pair**
 
 ```bash
 $ ./bin/publisher keys
 
-生成的密钥对：
-  私钥: 0x7c3a9f2e... (请妥善保管)
-  公钥: 0x8d4b1c5a... (用于客户端验证)
+Generated key pair:
+  Private Key: 0x7c3a9f2e... (keep safe)
+  Public Key: 0x8d4b1c5a... (for client verification)
   KeyID: k1_20240118
 ```
 
-**2. 初始化数据库**
+**2. Initialize Database**
 
 ```bash
 $ ./bin/publisher init
 
-初始化完成：
-  数据库: ./data/fences.db
-  版本: v1
+Initialization complete:
+  Database: ./data/fences.db
+  Version: v1
 ```
 
-**3. 添加围栏**
+**3. Add Geofence**
 
-创建围栏数据文件 `fence.json`：
+Create a geofence data file `fence.json`:
 
 ```json
 {
@@ -193,41 +196,41 @@ $ ./bin/publisher init
   "start_ts": 1709880000,
   "end_ts": 1709990000,
   "priority": 10,
-  "name": "北京三环临时管控区",
-  "description": "临时活动禁飞区"
+  "name": "Beijing 3rd Ring Temporary Control Zone",
+  "description": "No-fly zone for temporary event"
 }
 ```
 
-添加到数据库：
+Add to database:
 
 ```bash
 $ ./bin/publisher add fence.json
 
-添加成功：fence-20240118-001 (类型: TEMP_RESTRICTION)
+Added successfully: fence-20240118-001 (type: TEMP_RESTRICTION)
 ```
 
-**4. 发布更新**
+**4. Publish Update**
 
 ```bash
 $ ./bin/publisher publish --output ./output
 
-发布完成：
-  版本: v2
-  增量包: ./output/v1_v2.delta (2.3 KB)
-  快照: ./output/v2.snapshot.bin (15.6 KB)
-  清单: ./output/manifest.json
+Publish complete:
+  Version: v2
+  Delta: ./output/v1_v2.delta (2.3 KB)
+  Snapshot: ./output/v2.snapshot.bin (15.6 KB)
+  Manifest: ./output/manifest.json
 ```
 
-**5. 部署到 CDN**
+**5. Deploy to CDN**
 
-将 `output/` 目录上传到你的 CDN/OSS：
+Upload the `output/` directory to your CDN/OSS:
 
 ```bash
-# 示例：使用 AWS CLI
+# Example: Using AWS CLI
 aws s3 sync ./output s3://your-bucket/geofence/
 ```
 
-**6. 客户端使用**
+**6. Client Usage**
 
 ```bash
 $ ./bin/sdk-example \
@@ -235,67 +238,67 @@ $ ./bin/sdk-example \
   -public-key 0x8d4b1c5a... \
   -store ./geofence.db
 
-启动同步...
-  当前版本: v0
-  远程版本: v2
-  下载增量包: 2.3 KB
-  应用更新完成: v0 → v2
-  验签通过
+Starting sync...
+  Current version: v0
+  Remote version: v2
+  Downloading delta: 2.3 KB
+  Update applied: v0 → v2
+  Signature verified
 
-开始围栏检查...
-  检查 (39.9042, 116.4074): 禁止飞行 - 北京三环临时管控区
+Starting geofence check...
+  Check (39.9042, 116.4074): NOT ALLOWED - Beijing 3rd Ring Temporary Control Zone
 ```
 
 ---
 
-## 使用指南
+## Usage Guide
 
-### 发布工具 (Publisher Tool)
+### Publisher Tool
 
-发布工具用于管理和发布地理围栏更新。
+The publisher tool is used to manage and publish geofence updates.
 
-#### 命令说明
+#### Command Reference
 
 ```bash
-# 生成 Ed25519 密钥对
+# Generate Ed25519 key pair
 $ publisher keys
 
-# 初始化围栏数据库
+# Initialize geofence database
 $ publisher init [--db-path ./data/fences.db]
 
-# 添加新围栏
+# Add new geofence
 $ publisher add <fence.json>
 
-# 批量添加围栏
+# Batch add geofences
 $ publisher add --batch <fences-dir>
 
-# 列出所有围栏
+# List all geofences
 $ publisher list [--type TEMP_RESTRICTION]
 
-# 删除围栏
+# Remove geofence
 $ publisher remove <fence-id>
 
-# 发布新版本
-$ publisher publish [--output ./output] [--message "更新说明"]
+# Publish new version
+$ publisher publish [--output ./output] [--message "update message"]
 
-# 查看版本历史
+# View version history
 $ publisher history
 ```
 
-#### 支持的围栏类型
+#### Supported Geofence Types
 
-| 类型 | 说明 | 优先级建议 |
-|------|------|-----------|
-| `TEMP_RESTRICTION` | 临时管控区 | 10-50 |
-| `PERMANENT_NO_FLY` | 永久禁飞区 | 100 |
-| `ALTITUDE_LIMIT` | 高度限制区 | 20-40 |
-| `ALTITUDE_MINIMUM` | 最低高度要求 | 20-40 |
-| `SPEED_LIMIT` | 速度限制区 | 10-30 |
+| Type | Description | Priority Range |
+| ------ | ------------- | ---------------- |
+| `TEMP_RESTRICTION` | Temporary restriction zone | 10-50 |
+| `PERMANENT_NO_FLY` | Permanent no-fly zone | 100 |
+| `ALTITUDE_LIMIT` | Altitude limit zone | 20-40 |
+| `ALTITUDE_MINIMUM` | Minimum altitude requirement | 20-40 |
+| `SPEED_LIMIT` | Speed limit zone | 10-30 |
 
-#### 几何形状支持
+#### Geometry Support
 
 ```json
-// 多边形（Polygon）
+// Polygon
 {
   "geometry": {
     "polygon": [
@@ -307,7 +310,7 @@ $ publisher history
   }
 }
 
-// 圆形（Circle）
+// Circle
 {
   "geometry": {
     "circle": {
@@ -317,7 +320,7 @@ $ publisher history
   }
 }
 
-// 矩形（Rectangle）
+// Rectangle
 {
   "geometry": {
     "rectangle": {
@@ -330,11 +333,11 @@ $ publisher history
 
 ---
 
-### 客户端 SDK (Drone SDK)
+### Client SDK (Drone SDK)
 
-SDK 提供地理围栏查询和自动同步功能。
+The SDK provides geofence queries and automatic synchronization.
 
-#### Go SDK 集成
+#### Go SDK Integration
 
 ```go
 package main
@@ -351,293 +354,296 @@ import (
 func main() {
     ctx := context.Background()
 
-    // 创建配置
+    // Create configuration
     cfg := &config.ClientConfig{
         ManifestURL:    "https://cdn.example.com/geofence/manifest.json",
-        PublicKeyHex:   "8d4b1c5a...", // 公钥十六进制
+        PublicKeyHex:   "8d4b1c5a...", // Public key in hex
         StorePath:      "./geofence.db",
         SyncInterval:   1 * time.Minute,
         HTTPTimeout:    30 * time.Second,
     }
 
-    // 创建同步器
+    // Create syncer
     syncer, err := sync.NewSyncer(ctx, cfg)
     if err != nil {
         log.Fatal(err)
     }
     defer syncer.Close()
 
-    // 启动自动同步
+    // Start auto-sync
     results := syncer.StartAutoSync(ctx, 1*time.Minute)
 
-    // 处理同步结果
+    // Handle sync results
     go func() {
         for result := range results {
             if result.Error != nil {
-                log.Printf("同步错误: %v", result.Error)
+                log.Printf("Sync error: %v", result.Error)
                 continue
             }
             if result.UpToDate {
-                log.Printf("已是最新版本 (v%d)", result.CurrentVer)
+                log.Printf("Already up to date (v%d)", result.CurrentVer)
             } else {
-                log.Printf("更新完成: v%d → v%d，耗时 %v",
+                log.Printf("Update complete: v%d → v%d, took %v",
                     result.PreviousVer, result.CurrentVer, result.Duration)
             }
         }
     }()
 
-    // 围栏检查
+    // Geofence check
     allowed, restriction, err := syncer.Check(ctx, 39.9042, 116.4074)
     if err != nil {
         log.Fatal(err)
     }
 
     if !allowed {
-        log.Printf("禁止飞行: %s - %s", restriction.Name, restriction.Description)
-        // 执行禁飞逻辑...
+        log.Printf("NOT ALLOWED: %s - %s", restriction.Name, restriction.Description)
+        // Execute no-fly logic...
     }
 }
 ```
 
-#### SDK API 参考
+#### SDK API Reference
 
-| 方法 | 说明 | 返回值 |
-|------|------|--------|
-| `NewSyncer(ctx, cfg)` | 创建同步器 | `(*Syncer, error)` |
-| `StartAutoSync(ctx, interval)` | 启动自动同步 | `<-chan SyncResult` |
-| `CheckForUpdates(ctx)` | 检查更新 | `(*Manifest, error)` |
-| `Sync(ctx)` | 执行同步 | `(*SyncResult, error)` |
-| `Check(ctx, lat, lon)` | 围栏检查 | `(allowed, restriction, error)` |
-| `Close()` | 关闭同步器 | `error` |
+| Method | Description | Return Value |
+| -------- | ------------- | -------------- |
+| `NewSyncer(ctx, cfg)` | Create syncer | `(*Syncer, error)` |
+| `StartAutoSync(ctx, interval)` | Start auto-sync | `<-chan SyncResult` |
+| `CheckForUpdates(ctx)` | Check for updates | `(*Manifest, error)` |
+| `Sync(ctx)` | Execute sync | `(*SyncResult, error)` |
+| `Check(ctx, lat, lon)` | Geofence check | `(allowed, restriction, error)` |
+| `Close()` | Close syncer | `error` |
 
 ---
 
-## API 文档
+## API Documentation
 
-### pkg/crypto - 密码学模块
+### pkg/crypto - Cryptography Module
 
 ```go
-// 生成 Ed25519 密钥对
+// Generate Ed25519 key pair
 keyPair, err := crypto.GenerateKeyPair()
 
-// 对数据签名
+// Sign data
 signature := crypto.Sign(privateKey, data)
 
-// 验证签名
+// Verify signature
 valid := crypto.Verify(publicKey, data, signature)
 
-// 计算密钥 ID（用于密钥轮换）
+// Calculate key ID (for key rotation)
 keyID := crypto.PublicKeyToKeyID(publicKey)
 ```
 
-### pkg/merkle - Merkle Tree 模块
+### pkg/merkle - Merkle Tree Module
 
 ```go
-// 从围栏项构建 Merkle Tree
+// Build Merkle Tree from fence items
 tree, err := merkle.NewTree(fences)
 
-// 获取根哈希
+// Get root hash
 rootHash := tree.RootHash()
 
-// 生成 Merkle 证明
+// Generate Merkle proof
 proof, err := tree.GetProof(fenceID)
 
-// 验证 Merkle 证明
+// Verify Merkle proof
 valid := merkle.VerifyProof(fenceID, fenceData, proof, rootHash)
 ```
 
-### pkg/storage - 存储模块
+### pkg/storage - Storage Module
 
 ```go
-// 打开数据库
+// Open database
 store, err := storage.Open(ctx, &storage.Config{Path: "./geofence.db"})
 
-// 添加围栏
+// Add fence
 store.AddFence(ctx, &fence)
 
-// 点查询（使用 R-Tree）
+// Point query (using R-Tree)
 fences, err := store.QueryAtPoint(ctx, lat, lon)
 
-// 版本管理
+// Version management
 version, _ := store.GetVersion(ctx)
 store.SetVersion(ctx, newVersion)
 ```
 
-### pkg/sync - 同步模块
+### pkg/sync - Sync Module
 
 ```go
-// 创建同步器
+// Create syncer
 syncer, _ := sync.NewSyncer(ctx, cfg)
 
-// 检查更新
+// Check for updates
 manifest, _ := syncer.CheckForUpdates(ctx)
 
-// 同步数据
+// Sync data
 result, _ := syncer.Sync(ctx)
 
-// 自动同步
+// Auto-sync
 results := syncer.StartAutoSync(ctx, interval)
 ```
 
-### pkg/binarydiff - 二进制差分模块
+### pkg/binarydiff - Binary Diff Module
 
 ```go
-// 计算差异
+// Calculate diff
 delta, err := binarydiff.Diff(oldFences, newFences)
 
-// 应用差异
+// Apply diff
 newFences, err := binarydiff.PatchFences(oldFences, delta)
 ```
 
 ---
 
-## 性能指标
+## Performance Metrics
 
-| 操作 | 性能 | 说明 |
-|------|------|------|
-| 围栏检查 | < 1ms | 1000 次查询，R-Tree 索引 |
-| Merkle Tree 构建 | < 100ms | 1000 个围栏 |
-| Delta 计算 | < 50ms | 1000 个围栏对比 |
-| 增量包大小 | ~2-5 KB | 典型 100 个围栏的变更 |
-| 全量快照 | ~15 KB | 100 个围栏（Protobuf 编码） |
-
----
-
-## 协议规范
-
-### 围栏项 (Fence Item)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | string | 唯一标识符 |
-| `type` | FenceType | 围栏类型 |
-| `geometry` | Geometry | 几何形状（多边形/圆形/矩形） |
-| `start_ts` | int64 | 生效时间戳 |
-| `end_ts` | int64 | 失效时间戳，0 表示永不过期 |
-| `priority` | uint32 | 优先级，高优先级覆盖低优先级 |
-| `max_alt_m` | uint32 | 最大高度限制（米），0 表示无限制 |
-| `max_speed_mps` | uint32 | 最大速度限制（米/秒），0 表示无限制 |
-| `name` | string | 围栏名称 |
-| `description` | string | 围栏描述 |
-| `signature` | []byte | Ed25519 签名 |
-| `key_id` | string | 密钥 ID |
-
-### 清单文件 (Manifest)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `version` | uint64 | 全局版本号（递增） |
-| `timestamp` | int64 | 发布时间戳 |
-| `root_hash` | []byte | Merkle Tree 根哈希 |
-| `delta_url` | string | 增量包下载地址 |
-| `snapshot_url` | string | 全量快照下载地址 |
-| `delta_size` | uint64 | 增量包大小（字节） |
-| `snapshot_size` | uint64 | 快照大小（字节） |
-| `delta_hash` | []byte | 增量包哈希（SHA-256） |
-| `snapshot_hash` | []byte | 快照哈希（SHA-256） |
-| `message` | string | 版本消息 |
+| Operation | Performance | Notes |
+| ----------- | ------------- | ------- |
+| Geofence Check | < 1ms | 1000 queries, R-Tree indexed |
+| Merkle Tree Build | < 100ms | 1000 fences |
+| Delta Calculation | < 50ms | 1000 fences comparison |
+| Delta Size | ~2-5 KB | Typical 100 fence changes |
+| Full Snapshot | ~15 KB | 100 fences (Protobuf encoded) |
 
 ---
 
-## 项目结构
+## Protocol Specification
+
+### Fence Item
+
+| Field | Type | Description |
+| ------- | ------ | ------------- |
+| `id` | string | Unique identifier |
+| `type` | FenceType | Geofence type |
+| `geometry` | Geometry | Geometry shape (polygon/circle/rectangle) |
+| `start_ts` | int64 | Effective timestamp |
+| `end_ts` | int64 | Expiry timestamp, 0 means never expires |
+| `priority` | uint32 | Priority, higher overrides lower |
+| `max_alt_m` | uint32 | Max altitude limit (meters), 0 means no limit |
+| `max_speed_mps` | uint32 | Max speed limit (m/s), 0 means no limit |
+| `name` | string | Geofence name |
+| `description` | string | Geofence description |
+| `signature` | []byte | Ed25519 signature |
+| `key_id` | string | Key ID |
+
+### Manifest File
+
+| Field | Type | Description |
+| ------- | ------ | ------------- |
+| `version` | uint64 | Global version number (incrementing) |
+| `timestamp` | int64 | Publish timestamp |
+| `root_hash` | []byte | Merkle Tree root hash |
+| `delta_url` | string | Delta package download URL |
+| `snapshot_url` | string | Full snapshot download URL |
+| `delta_size` | uint64 | Delta package size (bytes) |
+| `snapshot_size` | uint64 | Snapshot size (bytes) |
+| `delta_hash` | []byte | Delta package hash (SHA-256) |
+| `snapshot_hash` | []byte | Snapshot hash (SHA-256) |
+| `message` | string | Version message |
+
+---
+
+## Project Structure
 
 ```
 geofence-updater-lite/
-├── cmd/                          # 命令行工具
-│   ├── publisher/                # 发布工具（服务端）
-│   └── sdk-example/               # SDK 使用示例（客户端）
-├── pkg/                          # 核心包
-│   ├── binarydiff/               # 二进制差分算法
-│   ├── client/                   # HTTP 客户端
-│   ├── config/                   # 配置管理
-│   ├── converter/                # 数据格式转换
-│   ├── crypto/                   # Ed25519 密码学
-│   ├── geofence/                 # 地理围栏核心逻辑
-│   ├── merkle/                   # Merkle Tree 实现
-│   ├── protocol/protobuf/        # Protocol Buffers 定义
-│   ├── publisher/                # 发布逻辑
-│   ├── storage/                  # SQLite 存储层
-│   ├── sync/                     # 同步逻辑
-│   └── version/                  # 版本管理
-├── internal/                     # 内部包
-│   ├── testutil/                 # 测试工具
-│   └── version/                  # 内部版本信息
-├── docs/                         # 文档
-│   ├── spec/                     # 技术规范
-│   ├── progress/                 # 进度文档
-│   └── planning/                 # 计划文档
-├── scripts/                      # 构建脚本
-├── test/                         # 测试数据
-├── bin/                          # 构建输出
-├── Makefile                      # 构建系统
-├── go.mod                        # Go 模块定义
-├── go.sum                        # 依赖锁定
-├── Dockerfile                    # Docker 定义
-├── LICENSE                       # Apache 2.0 许可证
-├── README.md                     # 本文件
-├── CONTRIBUTING.md               # 贡献指南
-├── CHANGELOG.md                  # 变更日志
-├── CLAUDE.md                     # Claude Code 项目指导
-└── SECURITY.md                   # 安全政策
+├── cmd/                          # Command-line tools
+│   ├── publisher/                # Publisher tool (server)
+│   └── sdk-example/              # SDK usage example (client)
+├── pkg/                          # Core packages
+│   ├── binarydiff/               # Binary diff algorithm
+│   ├── client/                   # HTTP client
+│   ├── config/                   # Configuration management
+│   ├── converter/                # Data format conversion
+│   ├── crypto/                   # Ed25519 cryptography
+│   ├── geofence/                 # Geofence core logic
+│   ├── merkle/                   # Merkle Tree implementation
+│   ├── protocol/protobuf/        # Protocol Buffers definitions
+│   ├── publisher/                # Publishing logic
+│   ├── storage/                  # SQLite storage layer
+│   ├── sync/                     # Sync logic
+│   └── version/                  # Version management
+├── internal/                     # Internal packages
+│   ├── testutil/                 # Test utilities
+│   └── version/                  # Internal version info
+├── docs/                         # Documentation
+│   ├── spec/                     # Technical specifications
+│   ├── progress/                 # Progress documentation
+│   └── planning/                 # Planning documents
+├── scripts/                      # Build scripts
+├── test/                         # Test data
+├── bin/                          # Build output
+├── Makefile                      # Build system
+├── go.mod                        # Go module definition
+├── go.sum                        # Dependency lock
+├── Dockerfile                    # Docker definition
+├── LICENSE                       # Apache 2.0 license
+├── README.md                     # This file
+├── README.zh-CN.md               # Chinese version
+├── CONTRIBUTING.md               # Contributing guide
+├── CHANGELOG.md                  # Changelog
+├── CLAUDE.md                     # Claude Code project guide
+└── SECURITY.md                   # Security policy
 ```
 
 ---
 
-## 开发指南
+## Development Guide
 
-### 运行测试
+### Running Tests
 
 ```bash
-# 运行所有测试
+# Run all tests
 make test
 
-# 运行带覆盖率的测试
+# Run tests with coverage
 make test-coverage
 
-# 运行基准测试
+# Run benchmarks
 make test-bench
 ```
 
-### 代码规范
+### Code Standards
 
 ```bash
-# 代码格式化
+# Format code
 make fmt
 
-# 静态检查
+# Static check
 make vet
 
-# 代码检查（需要 golangci-lint）
+# Lint (requires golangci-lint)
 make lint
 ```
 
-### 构建
+### Building
 
 ```bash
-# 构建所有二进制文件
+# Build all binaries
 make build-all
 
-# 交叉编译
+# Cross-compile
 make cross-compile
 
-# 构建 Docker 镜像
+# Build Docker image
 make docker-build
 ```
 
 ---
 
-## 常见问题 (FAQ)
+## FAQ
 
-**Q: 为什么选择 Ed25519 而不是 RSA/ECDSA？**
+**Q: Why Ed25519 instead of RSA/ECDSA?**
 
-A: Ed25519 提供更高的安全性和性能：
-- 签名大小仅 64 字节（RSA-2048 需要 256 字节）
-- 验证速度比 ECDSA 快约 5 倍
-- 内置抗侧信道攻击保护
+A: Ed25519 offers better security and performance:
 
-**Q: 如何处理密钥轮换？**
+- Signature size only 64 bytes (RSA-2048 needs 256 bytes)
+- Verification ~5x faster than ECDSA
+- Built-in side-channel attack protection
 
-A: 使用 KeyID 机制，每个签名包含密钥 ID，客户端可以支持多个公钥：
+**Q: How to handle key rotation?**
+
+A: Use the KeyID mechanism. Each signature contains a key ID, and clients can support multiple public keys:
+
 ```go
 syncer.PublicKeys = map[string]*crypto.PublicKey{
     "k1_2024": oldPublicKey,
@@ -645,38 +651,39 @@ syncer.PublicKeys = map[string]*crypto.PublicKey{
 }
 ```
 
-**Q: 支持多少个围栏？**
+**Q: How many geofences are supported?**
 
-A: 理论上无上限。实测：
-- 10,000 个围栏：全量快照约 1.5 MB，查询 < 2ms
-- 100,000 个围栏：全量快照约 15 MB，查询 < 5ms
+A: Theoretically unlimited. Tested:
 
-**Q: 能否在没有网络的情况下使用？**
+- 10,000 fences: Full snapshot ~1.5 MB, query < 2ms
+- 100,000 fences: Full snapshot ~15 MB, query < 5ms
 
-A: 可以。SDK 会使用本地缓存的围栏数据继续工作，网络恢复后自动同步。
+**Q: Can it work offline?**
+
+A: Yes. The SDK continues working with locally cached geofence data and automatically syncs when network is restored.
 
 ---
 
-## 路线图
+## Roadmap
 
-- [x] 核心数据结构
-- [x] Ed25519 签名验证
-- [x] Merkle Tree 实现
-- [x] R-Tree 空间索引
-- [x] 二进制差分
-- [x] HTTP 同步
-- [x] 发布工具
-- [x] SDK 示例
-- [ ] CI/CD 流水线
+- [x] Core data structures
+- [x] Ed25519 signature verification
+- [x] Merkle Tree implementation
+- [x] R-Tree spatial indexing
+- [x] Binary delta
+- [x] HTTP sync
+- [x] Publisher tool
+- [x] SDK example
+- [ ] CI/CD pipeline
 - [ ] C++ SDK
-- [ ] 性能基准测试
-- [ ] Web 管理界面
+- [ ] Performance benchmarks
+- [ ] Web management interface
 
 ---
 
-## 许可证
+## License
 
-本项目采用 [Apache License 2.0](LICENSE) 许可证。
+This project is licensed under the [Apache License 2.0](LICENSE).
 
 ```
 Copyright 2024-2025 Geofence-Updater-Lite Contributors
@@ -696,32 +703,16 @@ limitations under the License.
 
 ---
 
-## 贡献
+## Contributing
 
-欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解如何参与贡献。
-
----
-
-## 致谢
-
-本项目借鉴了以下开源项目的设计思路：
-
-- [Git](https://git-scm.com/) - Merkle Tree 版本管理思想
-- [bsdiff](https://www.daemonology.net/bsdiff/) - 二进制差分算法
-- [go-polyline](https://github.com/twpayne/go-polyline) - 坐标压缩算法
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
 
 ---
 
-## 安全问题
+## Acknowledgments
 
-如发现安全漏洞，请发送邮件至 [security@example.com](mailto:security@example.com)，不要在公开 Issue 中报告。
+This project draws inspiration from:
 
----
-
-<div align="center">
-
-**[⬆ 返回顶部](#geofence-updater-lite-gul)**
-
-Made with ❤️ by the Geofence-Updater-Lite Contributors
-
-</div>
+- [Git](https://git-scm.com/) - Merkle Tree version management concept
+- [bsdiff](https://www.daemonology.net/bsdiff/) - Binary diff algorithm
+- [go-polyline](https://github.com/twpayne/go-polyline) - Coordinate compression algorithm
