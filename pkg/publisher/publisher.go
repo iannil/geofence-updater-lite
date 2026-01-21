@@ -37,7 +37,9 @@ func NewPublisher(ctx context.Context, cfg *config.PublisherConfig) (*Publisher,
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key: %w", err)
 	}
-	keyPair, err := crypto.DeriveKeyPair(nil, privateKey)
+	// Ed25519 private key (64 bytes) contains public key in last 32 bytes
+	publicKey := privateKey[32:]
+	keyPair, err := crypto.DeriveKeyPair(publicKey, privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive key pair: %w", err)
 	}

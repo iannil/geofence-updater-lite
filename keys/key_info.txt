@@ -1,0 +1,13 @@
+2026/01/21 11:05:39 Generating new Ed25519 key pair...
+
+Generated key pair:
+Key ID: a45e95ae20d458da
+Public Key: 458637aed1f533d8520c77a895f9f3f838b667b35d4b499b322555f74e51c539
+Private Key: 5c6088db1c760dba15cc8d1abc62fe4b497fa3548403c4cb2f7721b5ea8862ad458637aed1f533d8520c77a895f9f3f838b667b35d4b499b322555f74e51c539
+
+IMPORTANT: Store the private key securely!
+Never share the private key.
+
+To save keys to files:
+  echo '458637aed1f533d8520c77a895f9f3f838b667b35d4b499b322555f74e51c539' > public.key
+  echo '5c6088db1c760dba15cc8d1abc62fe4b497fa3548403c4cb2f7721b5ea8862ad458637aed1f533d8520c77a895f9f3f838b667b35d4b499b322555f74e51c539' > private.key
