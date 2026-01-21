@@ -674,7 +674,7 @@ A: Yes. The SDK continues working with locally cached geofence data and automati
 - [x] HTTP sync
 - [x] Publisher tool
 - [x] SDK example
-- [ ] CI/CD pipeline
+- [x] CI/CD pipeline (GitHub Actions)
 - [ ] C++ SDK
 - [ ] Performance benchmarks
 - [ ] Web management interface

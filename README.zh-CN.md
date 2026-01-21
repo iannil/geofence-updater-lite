@@ -674,7 +674,7 @@ A: 可以。SDK 会使用本地缓存的围栏数据继续工作，网络恢复�
 - [x] HTTP 同步
 - [x] 发布工具
 - [x] SDK 示例
-- [ ] CI/CD 流水线
+- [x] CI/CD 流水线 (GitHub Actions)
 - [ ] C++ SDK
 - [ ] 性能基准测试
 - [ ] Web 管理界面
