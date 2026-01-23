@@ -6,11 +6,13 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 
+	"github.com/iannil/geofence-updater-lite/pkg/converter"
 	"github.com/iannil/geofence-updater-lite/pkg/geofence"
+	pb "github.com/iannil/geofence-updater-lite/pkg/protocol/protobuf"
+	"google.golang.org/protobuf/proto"
 )
 
 // DeltaFile represents a binary diff file.
@@ -23,15 +25,18 @@ type DeltaFile struct {
 	DiffHash    []byte // SHA-256 of diff data
 }
 
-// Diff creates a binary diff between two fence collections.
+// Diff creates a binary diff between two fence collections using Protobuf serialization.
 func Diff(oldFences, newFences []geofence.FenceItem) (*DeltaFile, error) {
-	// Serialize old and new collections to JSON
-	oldData, err := json.Marshal(geofence.FenceCollection{Items: oldFences})
+	// Convert to Protobuf and serialize
+	oldCollection := &geofence.FenceCollection{Items: oldFences}
+	newCollection := &geofence.FenceCollection{Items: newFences}
+
+	oldData, err := proto.Marshal(converter.FenceCollectionToProto(oldCollection))
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal old fences: %w", err)
 	}
 
-	newData, err := json.Marshal(geofence.FenceCollection{Items: newFences})
+	newData, err := proto.Marshal(converter.FenceCollectionToProto(newCollection))
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal new fences: %w", err)
 	}
@@ -162,8 +167,9 @@ func Patch(oldData []byte, diffData []byte) ([]byte, error) {
 
 // PatchFences applies a binary diff to old fences to produce new fences.
 func PatchFences(oldFences []geofence.FenceItem, delta *DeltaFile) ([]geofence.FenceItem, error) {
-	// Serialize old fences
-	oldData, err := json.Marshal(geofence.FenceCollection{Items: oldFences})
+	// Serialize old fences using Protobuf
+	oldCollection := &geofence.FenceCollection{Items: oldFences}
+	oldData, err := proto.Marshal(converter.FenceCollectionToProto(oldCollection))
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal old fences: %w", err)
 	}
@@ -182,10 +188,15 @@ func PatchFences(oldFences []geofence.FenceItem, delta *DeltaFile) ([]geofence.F
 		return nil, fmt.Errorf("failed to apply patch: %w", err)
 	}
 
-	// Unmarshal new fences
-	var collection geofence.FenceCollection
-	if err := json.Unmarshal(newData, &collection); err != nil {
+	// Unmarshal new fences from Protobuf
+	var pbCollection pb.FenceCollection
+	if err := proto.Unmarshal(newData, &pbCollection); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal new fences: %w", err)
+	}
+
+	collection := converter.FenceCollectionFromProto(&pbCollection)
+	if collection == nil {
+		return nil, fmt.Errorf("failed to convert protobuf collection")
 	}
 
 	return collection.Items, nil
@@ -233,21 +244,44 @@ func computeDeltaStats(oldFences, newFences []geofence.FenceItem) (added, remove
 	return added, removed, updated
 }
 
-// WriteDelta writes a delta file to the given writer.
+// WriteDelta writes a delta file to the given writer using Protobuf.
 func WriteDelta(delta *DeltaFile, w io.Writer) error {
-	if err := json.NewEncoder(w).Encode(delta); err != nil {
-		return fmt.Errorf("failed to write delta: %w", err)
+	pbDelta := &pb.DeltaFile{
+		FromVersion: delta.FromVersion,
+		ToVersion:   delta.ToVersion,
+		FromSize:    delta.FromSize,
+		ToSize:      delta.ToSize,
+		DiffData:    delta.DiffData,
+		DiffHash:    delta.DiffHash,
 	}
-	return nil
+	data, err := proto.Marshal(pbDelta)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delta: %w", err)
+	}
+	_, err = w.Write(data)
+	return err
 }
 
-// ReadDelta reads a delta file from the given reader.
+// ReadDelta reads a delta file from the given reader using Protobuf.
 func ReadDelta(r io.Reader) (*DeltaFile, error) {
-	var delta DeltaFile
-	if err := json.NewDecoder(r).Decode(&delta); err != nil {
-		return nil, fmt.Errorf("failed to read delta: %w", err)
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read delta data: %w", err)
 	}
-	return &delta, nil
+
+	var pbDelta pb.DeltaFile
+	if err := proto.Unmarshal(data, &pbDelta); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal delta: %w", err)
+	}
+
+	return &DeltaFile{
+		FromVersion: pbDelta.FromVersion,
+		ToVersion:   pbDelta.ToVersion,
+		FromSize:    pbDelta.FromSize,
+		ToSize:      pbDelta.ToSize,
+		DiffData:    pbDelta.DiffData,
+		DiffHash:    pbDelta.DiffHash,
+	}, nil
 }
 
 // DeltaHeader represents the header of a delta file.

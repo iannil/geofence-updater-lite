@@ -123,3 +123,24 @@ message FenceDelta {
   // Fences to update (new version replaces old)
   repeated FenceItem updated = 3;
 }
+
+// DeltaFile represents a binary diff file for efficient delta updates
+message DeltaFile {
+  // Source version
+  uint64 from_version = 1;
+
+  // Target version
+  uint64 to_version = 2;
+
+  // Size of original data
+  int64 from_size = 3;
+
+  // Size of new data
+  int64 to_size = 4;
+
+  // Binary diff data
+  bytes diff_data = 5;
+
+  // SHA-256 hash of diff data for verification
+  bytes diff_hash = 6;
+}

@@ -17,7 +17,6 @@ linters:
     - gocritic
     - goimports
     - misspell
-    - exportloopref
     - nilerr
     - noctx
     - prealloc
@@ -60,9 +59,7 @@ linters-settings:
     check-blank: false
 
   gosec:
-    excludes:
-      - G104  # Errors unhandled
-      - G307  # Deferring file close without checking
+    excludes: []  # All gosec rules enabled for security
 
   goimports:
     local-prefixes: github.com/iannil/geofence-updater-lite

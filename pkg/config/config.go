@@ -50,6 +50,11 @@ type ClientConfig struct {
 
 	// UserAgent for HTTP requests
 	UserAgent string `json:"user_agent"`
+
+	// InsecureSkipVerify disables signature verification (DANGEROUS: for development only!)
+	// When true, manifests will be accepted without signature verification.
+	// This should NEVER be used in production environments.
+	InsecureSkipVerify bool `json:"insecure_skip_verify,omitempty"`
 }
 
 // PublisherConfig contains configuration for the publisher tool.
@@ -136,8 +141,9 @@ func (c *ClientConfig) Validate() error {
 	if c.ManifestURL == "" {
 		return fmt.Errorf("manifest_url is required")
 	}
-	if c.PublicKeyHex == "" {
-		return fmt.Errorf("public_key_hex is required")
+	// PublicKeyHex is required unless InsecureSkipVerify is explicitly set
+	if c.PublicKeyHex == "" && !c.InsecureSkipVerify {
+		return fmt.Errorf("public_key_hex is required (set insecure_skip_verify=true to disable verification, NOT recommended for production)")
 	}
 	if c.StorePath == "" {
 		return fmt.Errorf("store_path is required")

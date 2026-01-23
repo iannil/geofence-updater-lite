@@ -117,8 +117,14 @@ func (m *Manager) PublishNewVersion(ctx context.Context, fences []geofence.Fence
 	}
 
 	// Sign manifest
-	manifestData, _ := manifest.MarshalBinaryForSigning()
-	signature := m.keyPair.Sign(manifestData)
+	manifestData, err := manifest.MarshalBinaryForSigning()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal manifest for signing: %w", err)
+	}
+	signature, err := m.keyPair.Sign(manifestData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign manifest: %w", err)
+	}
 	manifest.SetSignature(signature, m.keyPair.KeyID)
 
 	// Save manifest to storage
@@ -175,7 +181,9 @@ func (m *Manager) PublishNewVersion(ctx context.Context, fences []geofence.Fence
 				manifest.DeltaHash = delta.DiffHash
 
 				// Update manifest file
-				writeManifest(manifest, manifestPath)
+				if err := writeManifest(manifest, manifestPath); err != nil {
+					return nil, fmt.Errorf("failed to update manifest with delta info: %w", err)
+				}
 			}
 		}
 	}
@@ -297,7 +305,7 @@ func (m *Manager) Sync(ctx context.Context, remoteManifest *geofence.Manifest) (
 	defer m.mu.Unlock()
 
 	remoteVer := remoteManifest.Version
-	localVer, _ := m.GetCurrentVersion(ctx)
+	localVer := m.currentVersion // Direct access since we already hold the lock
 
 	if remoteVer <= localVer {
 		return &SyncResult{

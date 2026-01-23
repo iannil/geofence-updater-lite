@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,9 @@ import (
 	"github.com/iannil/geofence-updater-lite/pkg/geofence"
 	_ "modernc.org/sqlite"
 )
+
+// ErrFenceNotFound is returned when a fence is not found in the store.
+var ErrFenceNotFound = errors.New("fence not found")
 
 // Store is the interface for geofence data persistence.
 type Store interface {
@@ -185,8 +189,21 @@ func (s *SQLiteStore) AddFence(ctx context.Context, fence *geofence.FenceItem) e
 	// Calculate bounds for R-Tree
 	bounds := fence.GetBounds()
 
+	// Use transaction for atomicity
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	committed := false
+	defer func() {
+		if !committed {
+			tx.Rollback()
+		}
+	}()
+
 	// Insert fence and get the rowid
-	result, err := s.db.ExecContext(ctx, `
+	result, err := tx.ExecContext(ctx, `
 		INSERT INTO fences (id, type, start_ts, end_ts, priority, max_altitude, max_speed,
 			name, description, signature, key_id, geometry_json)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -200,21 +217,22 @@ func (s *SQLiteStore) AddFence(ctx context.Context, fence *geofence.FenceItem) e
 	// Get the rowid of the inserted fence
 	rowID, err := result.LastInsertId()
 	if err != nil {
-		// Rollback on error
-		s.db.ExecContext(ctx, "DELETE FROM fences WHERE id = ?", fence.ID)
 		return fmt.Errorf("failed to get rowid: %w", err)
 	}
 
-	// Add to R-Tree using rowid
-	_, err = s.db.ExecContext(ctx, `
+	// Add to R-Tree using rowid (same transaction)
+	_, err = tx.ExecContext(ctx, `
 		INSERT INTO fence_index (rowid, minX, maxX, minY, maxY)
 		VALUES (?, ?, ?, ?, ?)
 	`, rowID, bounds.MinLon, bounds.MaxLon, bounds.MinLat, bounds.MaxLat)
 	if err != nil {
-		// Rollback fence insert on R-Tree failure
-		s.db.ExecContext(ctx, "DELETE FROM fences WHERE rowid = ?", rowID)
 		return fmt.Errorf("failed to insert into rtree: %w", err)
 	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	committed = true
 
 	return nil
 }
@@ -263,8 +281,21 @@ func (s *SQLiteStore) UpdateFence(ctx context.Context, fence *geofence.FenceItem
 	// Calculate bounds
 	bounds := fence.GetBounds()
 
+	// Use transaction for atomicity
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	committed := false
+	defer func() {
+		if !committed {
+			tx.Rollback()
+		}
+	}()
+
 	// Update fence
-	result, err := s.db.ExecContext(ctx, `
+	result, err := tx.ExecContext(ctx, `
 		UPDATE fences SET type = ?, start_ts = ?, end_ts = ?, priority = ?,
 			max_altitude = ?, max_speed = ?, name = ?, description = ?,
 			signature = ?, key_id = ?, geometry_json = ?, updated_at = strftime('%s', 'now')
@@ -276,18 +307,26 @@ func (s *SQLiteStore) UpdateFence(ctx context.Context, fence *geofence.FenceItem
 		return fmt.Errorf("failed to update fence: %w", err)
 	}
 
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
 	if rows == 0 {
-		return fmt.Errorf("fence not found: %s", fence.ID)
+		return ErrFenceNotFound
 	}
 
-	// Update R-Tree using rowid
-	_, err = s.db.ExecContext(ctx, `
+	// Update R-Tree using rowid (same transaction)
+	_, err = tx.ExecContext(ctx, `
 		UPDATE fence_index SET minX = ?, maxX = ?, minY = ?, maxY = ? WHERE rowid = (SELECT rowid FROM fences WHERE id = ?)
 	`, bounds.MinLon, bounds.MaxLon, bounds.MinLat, bounds.MaxLat, fence.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update rtree: %w", err)
 	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	committed = true
 
 	return nil
 }
@@ -297,32 +336,53 @@ func (s *SQLiteStore) DeleteFence(ctx context.Context, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Use transaction for atomicity
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	committed := false
+	defer func() {
+		if !committed {
+			tx.Rollback()
+		}
+	}()
+
 	// Get rowid first
 	var rowID int64
-	err := s.db.QueryRowContext(ctx, "SELECT rowid FROM fences WHERE id = ?", id).Scan(&rowID)
+	err = tx.QueryRowContext(ctx, "SELECT rowid FROM fences WHERE id = ?", id).Scan(&rowID)
 	if err == sql.ErrNoRows {
-		return fmt.Errorf("fence not found: %s", id)
+		return ErrFenceNotFound
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get rowid: %w", err)
 	}
 
 	// Delete from fences table
-	result, err := s.db.ExecContext(ctx, "DELETE FROM fences WHERE id = ?", id)
+	result, err := tx.ExecContext(ctx, "DELETE FROM fences WHERE id = ?", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete fence: %w", err)
 	}
 
-	rows, _ := result.RowsAffected()
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
 	if rows == 0 {
-		return fmt.Errorf("fence not found: %s", id)
+		return ErrFenceNotFound
 	}
 
-	// Delete from R-Tree
-	_, err = s.db.ExecContext(ctx, "DELETE FROM fence_index WHERE rowid = ?", rowID)
+	// Delete from R-Tree (same transaction)
+	_, err = tx.ExecContext(ctx, "DELETE FROM fence_index WHERE rowid = ?", rowID)
 	if err != nil {
 		return fmt.Errorf("failed to delete from rtree: %w", err)
 	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	committed = true
 
 	return nil
 }

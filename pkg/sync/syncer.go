@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/iannil/geofence-updater-lite/pkg/binarydiff"
@@ -23,7 +25,8 @@ type Syncer struct {
 	client       *client.Client
 	store        *storage.SQLiteStore
 	cfg          *config.ClientConfig
-	currentVer   uint64
+	currentVer   atomic.Uint64
+	mu           sync.RWMutex // protects lastCheck and lastSyncTime
 	lastCheck    time.Time
 	lastSyncTime time.Time
 }
@@ -52,13 +55,15 @@ func NewSyncer(ctx context.Context, cfg *config.ClientConfig) (*Syncer, error) {
 		currentVer = 0 // First time
 	}
 
-	return &Syncer{
-		client:     httpClient,
-		store:      store,
-		cfg:        cfg,
-		currentVer: currentVer,
-		lastCheck:  time.Time{},
-	}, nil
+	s := &Syncer{
+		client:    httpClient,
+		store:     store,
+		cfg:       cfg,
+		lastCheck: time.Time{},
+	}
+	s.currentVer.Store(currentVer)
+
+	return s, nil
 }
 
 // SyncResult contains the result of a sync operation.
@@ -76,7 +81,9 @@ type SyncResult struct {
 
 // CheckForUpdates checks if there's a new version available without downloading.
 func (s *Syncer) CheckForUpdates(ctx context.Context) (*geofence.Manifest, error) {
+	s.mu.Lock()
 	s.lastCheck = time.Now()
+	s.mu.Unlock()
 
 	manifest, err := s.client.FetchManifest(ctx)
 	if err != nil {
@@ -89,8 +96,9 @@ func (s *Syncer) CheckForUpdates(ctx context.Context) (*geofence.Manifest, error
 // Sync performs a full synchronization with the remote source.
 func (s *Syncer) Sync(ctx context.Context) *SyncResult {
 	start := time.Now()
+	currentVer := s.currentVer.Load()
 	result := &SyncResult{
-		PreviousVer: s.currentVer,
+		PreviousVer: currentVer,
 	}
 
 	// Fetch remote manifest
@@ -103,16 +111,16 @@ func (s *Syncer) Sync(ctx context.Context) *SyncResult {
 	result.CurrentVer = manifest.Version
 
 	// Check if update is needed
-	if manifest.Version <= s.currentVer {
+	if manifest.Version <= currentVer {
 		result.UpToDate = true
 		return result
 	}
 
 	// Need to update
-	log.Printf("[Sync] New version available: %d -> %d", s.currentVer, manifest.Version)
+	log.Printf("[Sync] New version available: %d -> %d", currentVer, manifest.Version)
 
 	// Decide whether to use delta or snapshot
-	useDelta := (manifest.Version - s.currentVer) == 1 && manifest.DeltaURL != ""
+	useDelta := (manifest.Version-currentVer) == 1 && manifest.DeltaURL != ""
 
 	if useDelta {
 		log.Printf("[Sync] Using delta update from %s", manifest.DeltaURL)
@@ -127,9 +135,13 @@ func (s *Syncer) Sync(ctx context.Context) *SyncResult {
 		return result
 	}
 
-	// Update current version
-	s.currentVer = manifest.Version
+	// Update current version atomically
+	s.currentVer.Store(manifest.Version)
+
+	s.mu.Lock()
 	s.lastSyncTime = time.Now()
+	s.mu.Unlock()
+
 	result.Duration = time.Since(start)
 
 	log.Printf("[Sync] Sync complete: version %d in %v", manifest.Version, result.Duration)
@@ -165,7 +177,7 @@ func (s *Syncer) applyDelta(ctx context.Context, manifest *geofence.Manifest) er
 	}
 
 	// Fill version info
-	delta.FromVersion = s.currentVer
+	delta.FromVersion = s.currentVer.Load()
 	delta.ToVersion = manifest.Version
 
 	// Apply patch
@@ -210,7 +222,7 @@ func (s *Syncer) applySnapshot(ctx context.Context, manifest *geofence.Manifest)
 			return fmt.Errorf("failed to build Merkle tree: %w", err)
 		}
 		rootHash := tree.RootHash()
-		if !crypto.VerifyHash(rootHash[:], manifest.RootHash) {
+		if !bytes.Equal(rootHash[:], manifest.RootHash) {
 			return fmt.Errorf("root hash verification failed")
 		}
 	}
@@ -238,24 +250,24 @@ func (s *Syncer) getCurrentFences(ctx context.Context) ([]geofence.FenceItem, er
 }
 
 // updateStorage updates the storage with new fences and manifest.
+// Note: Each storage operation (UpdateFence, AddFence, etc.) manages its own
+// transaction internally. A full transactional batch update would require
+// extending the Tx type to expose all operations.
 func (s *Syncer) updateStorage(ctx context.Context, fences []geofence.FenceItem, manifest *geofence.Manifest) error {
-	// Begin transaction
-	tx, err := s.store.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	// Clear existing fences
-	// Note: In a production system, this would be more sophisticated
-	// For now, we'll delete all and re-add
+	// Update or add each fence
 	for _, f := range fences {
 		// Try to update first
 		err := s.store.UpdateFence(ctx, &f)
 		if err != nil {
-			// Doesn't exist, add it
-			if err := s.store.AddFence(ctx, &f); err != nil {
-				return fmt.Errorf("failed to add fence %s: %w", f.ID, err)
+			// Check if it's specifically a "not found" error
+			if err == storage.ErrFenceNotFound {
+				// Fence doesn't exist, add it
+				if err := s.store.AddFence(ctx, &f); err != nil {
+					return fmt.Errorf("failed to add fence %s: %w", f.ID, err)
+				}
+			} else {
+				// Other error (database issue, constraint violation, etc.)
+				return fmt.Errorf("failed to update fence %s: %w", f.ID, err)
 			}
 		}
 	}
@@ -268,11 +280,6 @@ func (s *Syncer) updateStorage(ctx context.Context, fences []geofence.FenceItem,
 	// Update version
 	if err := s.store.SetVersion(ctx, manifest.Version); err != nil {
 		return fmt.Errorf("failed to set version: %w", err)
-	}
-
-	// Commit transaction
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -347,16 +354,20 @@ func (s *Syncer) Check(ctx context.Context, lat, lon float64) (bool, *geofence.F
 
 // GetCurrentVersion returns the current version number.
 func (s *Syncer) GetCurrentVersion() uint64 {
-	return s.currentVer
+	return s.currentVer.Load()
 }
 
 // GetLastCheckTime returns the time of the last update check.
 func (s *Syncer) GetLastCheckTime() time.Time {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.lastCheck
 }
 
 // GetLastSyncTime returns the time of the last successful sync.
 func (s *Syncer) GetLastSyncTime() time.Time {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.lastSyncTime
 }
 

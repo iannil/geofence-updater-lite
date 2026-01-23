@@ -97,8 +97,11 @@ type PublishResult struct {
 func (p *Publisher) Publish(ctx context.Context, fences []geofence.FenceItem) (*PublishResult, error) {
 	startTime := time.Now()
 
-	// Get old fences for delta calculation
-	oldFences, _ := p.getCurrentFences(ctx)
+	// Get old fences for delta calculation (ignore error - empty slice if none exist)
+	oldFences, err := p.getCurrentFences(ctx)
+	if err != nil {
+		oldFences = nil // Will skip delta generation
+	}
 
 	// Increment version
 	newVersion := p.currentVer + 1
@@ -164,8 +167,15 @@ func (p *Publisher) Publish(ctx context.Context, fences []geofence.FenceItem) (*
 	}
 
 	// Sign manifest
-	manifestData, _ := manifest.MarshalBinaryForSigning()
-	manifest.SetSignature(p.keyPair.Sign(manifestData), p.keyPair.KeyID)
+	manifestData, err := manifest.MarshalBinaryForSigning()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal manifest for signing: %w", err)
+	}
+	signature, err := p.keyPair.Sign(manifestData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign manifest: %w", err)
+	}
+	manifest.SetSignature(signature, p.keyPair.KeyID)
 
 	// Write files
 	snapshotPath := filepath.Join(p.cfg.OutputDir, fmt.Sprintf("v%d.bin", newVersion))
@@ -272,7 +282,11 @@ func (p *Publisher) signFence(fence *geofence.FenceItem) error {
 	}
 
 	// Sign the fence data
-	fence.Signature = p.keyPair.Sign(fenceData)
+	signature, err := p.keyPair.Sign(fenceData)
+	if err != nil {
+		return fmt.Errorf("failed to sign fence: %w", err)
+	}
+	fence.Signature = signature
 	fence.KeyID = p.keyPair.KeyID
 
 	return nil
@@ -351,7 +365,9 @@ func Initialize(ctx context.Context, cfg *config.PublisherConfig) error {
 
 	// Remove existing database if it exists
 	if _, err := os.Stat(storePath); err == nil {
-		os.Remove(storePath)
+		if err := os.Remove(storePath); err != nil {
+			return fmt.Errorf("failed to remove existing database: %w", err)
+		}
 	}
 
 	// Create new database

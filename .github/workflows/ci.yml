@@ -6,14 +6,18 @@ on:
   pull_request:
     branches: [ master, main, develop ]
 
+env:
+  GO_VERSION: '1.23'  # Primary Go version for builds
+
 jobs:
   test:
     name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        go-version: ['1.21', '1.22', '1.23']
+        os: [ubuntu-latest, macos-latest]
+        go-version: ['1.22', '1.23']
+      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -51,10 +55,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m
@@ -71,7 +75,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Build publisher
         run: go build -v ./cmd/publisher
@@ -93,7 +97,7 @@ jobs:
           name: binaries
           path: bin/*
 
-  check-security:
+  security:
     name: Security Check
     runs-on: ubuntu-latest
 
@@ -104,9 +108,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Run gosec
         uses: securego/gosec@master
         with:
-          args: ./...
+          args: -exclude-generated ./...

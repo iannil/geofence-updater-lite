@@ -7,10 +7,11 @@ import (
 )
 
 // MarshalBinary serializes the manifest to bytes for signing.
-// This excludes the Signature field itself.
+// This excludes the Signature and KeyID fields since they are signature metadata.
 func (m *Manifest) MarshalBinaryForSigning() ([]byte, error) {
 	copy := *m
 	copy.Signature = nil
+	copy.KeyID = "" // Also exclude KeyID as it's part of signature metadata
 
 	data, err := json.Marshal(copy)
 	if err != nil {

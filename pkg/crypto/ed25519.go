@@ -22,8 +22,8 @@ const (
 	// SignatureSize is the size of an Ed25519 signature in bytes.
 	SignatureSize = ed25519.SignatureSize
 
-	// KeyIDSize is the size of the key identifier hash.
-	KeyIDSize = 8
+	// KeyIDSize is the size of the key identifier hash (128-bit for collision resistance).
+	KeyIDSize = 16
 )
 
 // KeyPair represents an Ed25519 key pair.
@@ -67,6 +67,19 @@ func GenerateKeyFromReader(r io.Reader) (*KeyPair, error) {
 
 // DeriveKeyPair creates a KeyPair from existing keys.
 func DeriveKeyPair(publicKey, privateKey []byte) (*KeyPair, error) {
+	// If public key is nil, derive it from the private key
+	if publicKey == nil {
+		if len(privateKey) != PrivateKeySize {
+			return nil, fmt.Errorf("invalid private key size: %d", len(privateKey))
+		}
+		derivedPublicKey := ed25519.PrivateKey(privateKey).Public().(ed25519.PublicKey)
+		return &KeyPair{
+			PublicKey:  derivedPublicKey,
+			PrivateKey: privateKey,
+			KeyID:      computeKeyID(derivedPublicKey),
+		}, nil
+	}
+
 	if len(publicKey) != PublicKeySize {
 		return nil, fmt.Errorf("invalid public key size: %d", len(publicKey))
 	}
@@ -118,12 +131,19 @@ func computeKeyID(publicKey []byte) string {
 	return hex.EncodeToString(hash[:KeyIDSize])
 }
 
+// ErrNoPrivateKey is returned when signing is attempted without a private key.
+var ErrNoPrivateKey = fmt.Errorf("private key not available")
+
+// ErrInvalidPrivateKeySize is returned when the private key has an invalid size.
+var ErrInvalidPrivateKeySize = fmt.Errorf("invalid private key size")
+
 // Sign signs a message with the private key.
-func (k *KeyPair) Sign(message []byte) []byte {
+// Returns an error if the private key is not available.
+func (k *KeyPair) Sign(message []byte) ([]byte, error) {
 	if len(k.PrivateKey) == 0 {
-		panic("private key not available")
+		return nil, ErrNoPrivateKey
 	}
-	return ed25519.Sign(k.PrivateKey, message)
+	return ed25519.Sign(k.PrivateKey, message), nil
 }
 
 // Verify verifies a signature against a message.
@@ -135,11 +155,12 @@ func (k *KeyPair) Verify(message, signature []byte) bool {
 }
 
 // Sign signs a message with a private key.
-func Sign(privateKey, message []byte) []byte {
+// Returns an error if the private key has an invalid size.
+func Sign(privateKey, message []byte) ([]byte, error) {
 	if len(privateKey) != PrivateKeySize {
-		panic("invalid private key size")
+		return nil, ErrInvalidPrivateKeySize
 	}
-	return ed25519.Sign(privateKey, message)
+	return ed25519.Sign(privateKey, message), nil
 }
 
 // Verify verifies a signature with a public key.

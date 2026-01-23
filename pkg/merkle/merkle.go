@@ -10,7 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/iannil/geofence-updater-lite/pkg/converter"
 	"github.com/iannil/geofence-updater-lite/pkg/geofence"
+	pb "github.com/iannil/geofence-updater-lite/pkg/protocol/protobuf"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -357,15 +360,18 @@ type VersionInfo struct {
 	Timestamp   int64
 }
 
-// CreateSnapshot creates a snapshot of the current fences.
+// CreateSnapshot creates a snapshot of the current fences using Protobuf serialization.
+// Protobuf provides ~60% size reduction compared to JSON for binary data.
 func CreateSnapshot(fences []geofence.FenceItem) ([]byte, int64, error) {
-	collection := geofence.FenceCollection{
+	collection := &geofence.FenceCollection{
 		Items:     fences,
 		CreatedTS: time.Now().Unix(),
 		Version:   "",
 	}
 
-	data, err := json.Marshal(collection)
+	// Convert to Protobuf and serialize
+	pbCollection := converter.FenceCollectionToProto(collection)
+	data, err := proto.Marshal(pbCollection)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal snapshot: %w", err)
 	}
@@ -373,11 +379,16 @@ func CreateSnapshot(fences []geofence.FenceItem) ([]byte, int64, error) {
 	return data, int64(len(data)), nil
 }
 
-// LoadSnapshot loads a snapshot of fences.
+// LoadSnapshot loads a snapshot of fences from Protobuf format.
 func LoadSnapshot(data []byte) ([]geofence.FenceItem, error) {
-	var collection geofence.FenceCollection
-	if err := json.Unmarshal(data, &collection); err != nil {
+	var pbCollection pb.FenceCollection
+	if err := proto.Unmarshal(data, &pbCollection); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal snapshot: %w", err)
+	}
+
+	collection := converter.FenceCollectionFromProto(&pbCollection)
+	if collection == nil {
+		return nil, fmt.Errorf("failed to convert protobuf collection")
 	}
 
 	return collection.Items, nil

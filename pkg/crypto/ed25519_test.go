@@ -32,7 +32,10 @@ func TestSignAndVerify(t *testing.T) {
 
 	message := []byte("test message for geofence data")
 
-	signature := kp.Sign(message)
+	signature, err := kp.Sign(message)
+	if err != nil {
+		t.Fatalf("Sign failed: %v", err)
+	}
 	if len(signature) != SignatureSize {
 		t.Errorf("signature size = %d, want %d", len(signature), SignatureSize)
 	}
@@ -70,13 +73,19 @@ func TestKeyPairMethods(t *testing.T) {
 	message := []byte("test message")
 
 	// Test using global Sign function
-	sig1 := Sign(kp.PrivateKey, message)
+	sig1, err := Sign(kp.PrivateKey, message)
+	if err != nil {
+		t.Fatalf("Sign failed: %v", err)
+	}
 	if !Verify(kp.PublicKey, message, sig1) {
 		t.Error("global Sign/Verify failed")
 	}
 
 	// Test using KeyPair method
-	sig2 := kp.Sign(message)
+	sig2, err := kp.Sign(message)
+	if err != nil {
+		t.Fatalf("KeyPair.Sign failed: %v", err)
+	}
 	if !kp.Verify(message, sig2) {
 		t.Error("KeyPair.Sign/Verify failed")
 	}
@@ -107,14 +116,20 @@ func TestMarshalHex(t *testing.T) {
 	}
 
 	message := []byte("test message")
-	sig := kp.Sign(message)
+	sig, err := kp.Sign(message)
+	if err != nil {
+		t.Fatalf("Sign failed: %v", err)
+	}
 
 	if !Verify(pubDecoded, message, sig) {
 		t.Error("verification failed after round-trip encoding")
 	}
 
 	// Verify private key still works
-	sig2 := Sign(privDecoded, message)
+	sig2, err := Sign(privDecoded, message)
+	if err != nil {
+		t.Fatalf("Sign with decoded key failed: %v", err)
+	}
 	if !Verify(pubDecoded, message, sig2) {
 		t.Error("verification failed with decoded private key")
 	}
@@ -164,8 +179,14 @@ func TestDeriveKeyPair(t *testing.T) {
 	}
 
 	message := []byte("test")
-	sig1 := kp1.Sign(message)
-	sig2 := kp2.Sign(message)
+	sig1, err := kp1.Sign(message)
+	if err != nil {
+		t.Fatalf("kp1.Sign failed: %v", err)
+	}
+	sig2, err := kp2.Sign(message)
+	if err != nil {
+		t.Fatalf("kp2.Sign failed: %v", err)
+	}
 
 	if !bytes.Equal(sig1, sig2) {
 		t.Error("signatures differ for derived key pair")
@@ -179,7 +200,10 @@ func TestPublicKeyFromBytes(t *testing.T) {
 	}
 
 	message := []byte("test message")
-	signature := kp1.Sign(message)
+	signature, err := kp1.Sign(message)
+	if err != nil {
+		t.Fatalf("Sign failed: %v", err)
+	}
 
 	// Create verification-only key pair
 	kp2, err := PublicKeyFromBytes(kp1.PublicKey)

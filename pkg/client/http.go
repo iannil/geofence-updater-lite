@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"path"
@@ -20,10 +22,11 @@ import (
 
 // Client is an HTTP client for downloading geofence updates.
 type Client struct {
-	httpClient *http.Client
-	userAgent  string
-	publicKey  []byte
-	cdnBaseURL string
+	httpClient         *http.Client
+	userAgent          string
+	publicKey          []byte
+	cdnBaseURL         string
+	insecureSkipVerify bool
 }
 
 // NewClient creates a new HTTP client for geofence updates.
@@ -42,18 +45,24 @@ func NewClient(cfg *config.ClientConfig) (*Client, error) {
 		}
 	}
 
+	// Warn if signature verification is disabled
+	if cfg.InsecureSkipVerify {
+		log.Printf("[SECURITY WARNING] Signature verification is DISABLED! This is DANGEROUS and should NEVER be used in production.")
+	}
+
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: cfg.HTTPTimeout,
 			Transport: &http.Transport{
-				MaxIdleConns:        10,
-				IdleConnTimeout:     30 * time.Second,
-				DisableCompression:  false,
+				MaxIdleConns:       10,
+				IdleConnTimeout:    30 * time.Second,
+				DisableCompression: false,
 			},
 		},
-		userAgent:  cfg.UserAgent,
-		publicKey:  publicKey,
-		cdnBaseURL: cfg.ManifestURL,
+		userAgent:          cfg.UserAgent,
+		publicKey:          publicKey,
+		cdnBaseURL:         cfg.ManifestURL,
+		insecureSkipVerify: cfg.InsecureSkipVerify,
 	}, nil
 }
 
@@ -115,18 +124,30 @@ func (c *Client) FetchManifest(ctx context.Context) (*geofence.Manifest, error) 
 }
 
 // verifyManifestSignature verifies the signature of a manifest.
-func (c *Client) verifyManifestSignature(manifest *geofence.Manifest, data []byte) error {
-	if len(c.publicKey) == 0 {
-		// No public key configured, skip verification
+func (c *Client) verifyManifestSignature(manifest *geofence.Manifest, _ []byte) error {
+	// Check if verification is explicitly disabled
+	if c.insecureSkipVerify {
+		log.Printf("[SECURITY WARNING] Skipping signature verification for manifest (version=%d)", manifest.Version)
 		return nil
+	}
+
+	// Public key is required for verification
+	if len(c.publicKey) == 0 {
+		return fmt.Errorf("public key not configured: signature verification is required")
 	}
 
 	if len(manifest.Signature) == 0 {
 		return fmt.Errorf("manifest has no signature")
 	}
 
+	// Get the canonical data for signing (without signature field)
+	signingData, err := manifest.MarshalBinaryForSigning()
+	if err != nil {
+		return fmt.Errorf("failed to marshal manifest for verification: %w", err)
+	}
+
 	// Verify the signature
-	if !crypto.Verify(c.publicKey, data, manifest.Signature) {
+	if !crypto.Verify(c.publicKey, signingData, manifest.Signature) {
 		return fmt.Errorf("invalid signature")
 	}
 
@@ -151,10 +172,7 @@ func (c *Client) FetchSnapshot(ctx context.Context, snapshotURL string) ([]byte,
 	}
 
 	// Resolve relative URL
-	fullURL := snapshotURL
-	if !isAbsoluteURL(snapshotURL) {
-		fullURL = c.cdnBaseURL + snapshotURL
-	}
+	fullURL := resolveURL(c.cdnBaseURL, snapshotURL)
 
 	return c.fetchBinary(ctx, fullURL, "snapshot")
 }
@@ -166,10 +184,7 @@ func (c *Client) FetchDelta(ctx context.Context, deltaURL string) ([]byte, error
 	}
 
 	// Resolve relative URL
-	fullURL := deltaURL
-	if !isAbsoluteURL(deltaURL) {
-		fullURL = c.cdnBaseURL + deltaURL
-	}
+	fullURL := resolveURL(c.cdnBaseURL, deltaURL)
 
 	return c.fetchBinary(ctx, fullURL, "delta")
 }
@@ -209,9 +224,7 @@ func (c *Client) fetchBinary(ctx context.Context, urlStr, fileType string) ([]by
 
 // FetchWithProgress downloads a file with progress reporting.
 func (c *Client) FetchWithProgress(ctx context.Context, urlStr string, onProgress ProgressFunc) ([]byte, error) {
-	if !isAbsoluteURL(urlStr) {
-		urlStr = c.cdnBaseURL + urlStr
-	}
+	urlStr = resolveURL(c.cdnBaseURL, urlStr)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
 	if err != nil {
@@ -283,6 +296,27 @@ func isAbsoluteURL(urlStr string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+// resolveURL resolves a relative URL against a base URL.
+// Handles paths correctly (e.g., /snapshot.bin resolves to root of host).
+func resolveURL(baseURL, relativeURL string) string {
+	if isAbsoluteURL(relativeURL) {
+		return relativeURL
+	}
+
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		// Fallback to simple concatenation
+		return baseURL + relativeURL
+	}
+
+	ref, err := url.Parse(relativeURL)
+	if err != nil {
+		return baseURL + relativeURL
+	}
+
+	return base.ResolveReference(ref).String()
+}
+
 // VerifyDeltaHash verifies the SHA-256 hash of delta data.
 func VerifyDeltaHash(data []byte, expectedHash []byte) bool {
 	if len(expectedHash) == 0 {
@@ -312,8 +346,10 @@ func (c *Client) FetchManifestWithRetry(ctx context.Context, maxRetries int) (*g
 		default:
 		}
 
-		// Wait before retry (exponential backoff)
-		waitTime := time.Duration(1<<uint(i)) * time.Second
+		// Wait before retry (exponential backoff with jitter)
+		baseWait := time.Duration(1<<uint(i)) * time.Second
+		jitter := time.Duration(rand.Float64() * 0.5 * float64(baseWait))
+		waitTime := baseWait + jitter
 		if waitTime > 30*time.Second {
 			waitTime = 30 * time.Second
 		}
