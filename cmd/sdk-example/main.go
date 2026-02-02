@@ -81,12 +81,12 @@ func main() {
 
 func loadConfig() *config.ClientConfig {
 	cfg := &config.ClientConfig{
-		ManifestURL:    *manifestURL,
-		StorePath:      *storePath,
-		SyncInterval:   *interval,
-		HTTPTimeout:    config.DefaultHTTPTimeout,
+		ManifestURL:     *manifestURL,
+		StorePath:       *storePath,
+		SyncInterval:    *interval,
+		HTTPTimeout:     config.DefaultHTTPTimeout,
 		MaxDownloadSize: config.DefaultMaxDownloadSize,
-		UserAgent:      "GUL-SDK-Example/1.0",
+		UserAgent:       "GUL-SDK-Example/1.0",
 	}
 
 	// Load public key

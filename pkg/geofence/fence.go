@@ -161,7 +161,7 @@ func CheckFences(fences []FenceItem, p Point) CheckResult {
 	}
 
 	result := CheckResult{
-		Allowed:       true,
+		Allowed:        true,
 		MatchingFences: matchingFences,
 	}
 

@@ -256,8 +256,8 @@ func (c *Client) FetchWithProgress(ctx context.Context, urlStr string, onProgres
 	// Read with progress reporting
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, &progressReader{
-		reader:    resp.Body,
-		total:     totalSize,
+		reader:     resp.Body,
+		total:      totalSize,
 		onProgress: onProgress,
 	})
 

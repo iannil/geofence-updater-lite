@@ -48,12 +48,12 @@ func TestAddAndGetFence(t *testing.T) {
 
 	now := time.Now()
 	fence := &geofence.FenceItem{
-		ID:     "test-001",
-		Type:   geofence.FenceTypeTempRestriction,
-		StartTS: now.Unix(),
-		EndTS:   now.Add(24 * time.Hour).Unix(),
-		Priority: 50,
-		Name:     "Test Fence",
+		ID:          "test-001",
+		Type:        geofence.FenceTypeTempRestriction,
+		StartTS:     now.Unix(),
+		EndTS:       now.Add(24 * time.Hour).Unix(),
+		Priority:    50,
+		Name:        "Test Fence",
 		Description: "Test fence for storage",
 		Geometry: geofence.Geometry{
 			Polygon: []geofence.Point{
@@ -100,10 +100,10 @@ func TestUpdateFence(t *testing.T) {
 	defer store.Close()
 
 	fence := &geofence.FenceItem{
-		ID:     "test-002",
-		Type:   geofence.FenceTypePermanentNoFly,
-		StartTS: 0,
-		EndTS:   0,
+		ID:       "test-002",
+		Type:     geofence.FenceTypePermanentNoFly,
+		StartTS:  0,
+		EndTS:    0,
 		Priority: 50,
 		Name:     "Original Name",
 		Geometry: geofence.Geometry{
@@ -152,10 +152,10 @@ func TestDeleteFence(t *testing.T) {
 	defer store.Close()
 
 	fence := &geofence.FenceItem{
-		ID:     "test-003",
-		Type:   geofence.FenceTypeTempRestriction,
-		StartTS: time.Now().Unix(),
-		EndTS:   time.Now().Add(1 * time.Hour).Unix(),
+		ID:       "test-003",
+		Type:     geofence.FenceTypeTempRestriction,
+		StartTS:  time.Now().Unix(),
+		EndTS:    time.Now().Add(1 * time.Hour).Unix(),
 		Priority: 50,
 		Geometry: geofence.Geometry{
 			Polygon: []geofence.Point{
@@ -196,11 +196,11 @@ func TestListFences(t *testing.T) {
 	// Add multiple fences with unique IDs
 	fences := []*geofence.FenceItem{
 		{
-			ID:     "fence-list-1",
-			Type:   geofence.FenceTypeTempRestriction,
+			ID:       "fence-list-1",
+			Type:     geofence.FenceTypeTempRestriction,
 			Priority: 10,
-			StartTS: now.Unix(),
-			EndTS:   now.Add(1 * time.Hour).Unix(),
+			StartTS:  now.Unix(),
+			EndTS:    now.Add(1 * time.Hour).Unix(),
 			Geometry: geofence.Geometry{
 				Polygon: []geofence.Point{
 					{Latitude: 0, Longitude: 0},
@@ -211,11 +211,11 @@ func TestListFences(t *testing.T) {
 			},
 		},
 		{
-			ID:     "fence-list-2",
-			Type:   geofence.FenceTypePermanentNoFly,
+			ID:       "fence-list-2",
+			Type:     geofence.FenceTypePermanentNoFly,
 			Priority: 100,
-			StartTS: 0,
-			EndTS:   0,
+			StartTS:  0,
+			EndTS:    0,
 			Geometry: geofence.Geometry{
 				Polygon: []geofence.Point{
 					{Latitude: 10, Longitude: 10},
@@ -260,10 +260,10 @@ func TestQueryAtPoint(t *testing.T) {
 	// Add a fence covering Beijing area with active time window
 	now := time.Now()
 	fence := &geofence.FenceItem{
-		ID:     "beijing-query-test",
-		Type:   geofence.FenceTypeTempRestriction,
-		StartTS: now.Add(-1 * time.Hour).Unix(), // Started 1 hour ago
-		EndTS:   now.Add(24 * time.Hour).Unix(), // Ends in 24 hours
+		ID:       "beijing-query-test",
+		Type:     geofence.FenceTypeTempRestriction,
+		StartTS:  now.Add(-1 * time.Hour).Unix(), // Started 1 hour ago
+		EndTS:    now.Add(24 * time.Hour).Unix(), // Ends in 24 hours
 		Priority: 50,
 		Name:     "Beijing Restriction",
 		Geometry: geofence.Geometry{
@@ -317,10 +317,10 @@ func TestQueryInBounds(t *testing.T) {
 	// Add fences in different locations
 	fences := []*geofence.FenceItem{
 		{
-			ID:     "fence-north",
-			Type:   geofence.FenceTypeTempRestriction,
-			StartTS: time.Now().Unix(),
-			EndTS:   time.Now().Add(1 * time.Hour).Unix(),
+			ID:       "fence-north",
+			Type:     geofence.FenceTypeTempRestriction,
+			StartTS:  time.Now().Unix(),
+			EndTS:    time.Now().Add(1 * time.Hour).Unix(),
 			Priority: 50,
 			Geometry: geofence.Geometry{
 				Polygon: []geofence.Point{
@@ -332,10 +332,10 @@ func TestQueryInBounds(t *testing.T) {
 			},
 		},
 		{
-			ID:     "fence-south",
-			Type:   geofence.FenceTypeTempRestriction,
-			StartTS: time.Now().Unix(),
-			EndTS:   time.Now().Add(1 * time.Hour).Unix(),
+			ID:       "fence-south",
+			Type:     geofence.FenceTypeTempRestriction,
+			StartTS:  time.Now().Unix(),
+			EndTS:    time.Now().Add(1 * time.Hour).Unix(),
 			Priority: 50,
 			Geometry: geofence.Geometry{
 				Polygon: []geofence.Point{
@@ -461,10 +461,10 @@ func TestTransaction(t *testing.T) {
 
 	// Add fence within transaction
 	fence := &geofence.FenceItem{
-		ID:     "tx-fence",
-		Type:   geofence.FenceTypeTempRestriction,
-		StartTS: time.Now().Unix(),
-		EndTS:   time.Now().Add(1 * time.Hour).Unix(),
+		ID:       "tx-fence",
+		Type:     geofence.FenceTypeTempRestriction,
+		StartTS:  time.Now().Unix(),
+		EndTS:    time.Now().Add(1 * time.Hour).Unix(),
 		Priority: 50,
 		Geometry: geofence.Geometry{
 			Polygon: []geofence.Point{

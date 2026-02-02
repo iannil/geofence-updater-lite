@@ -19,12 +19,12 @@ func testPoint(lat, lon float64) Point {
 func testTemporaryFence() FenceItem {
 	now := time.Now()
 	return FenceItem{
-		ID:     "test-temp-001",
-		Type:   FenceTypeTempRestriction,
-		StartTS: now.Unix(),
-		EndTS:   now.Add(24 * time.Hour).Unix(),
-		Priority: 50,
-		Name:     "Test Temporary Restriction",
+		ID:          "test-temp-001",
+		Type:        FenceTypeTempRestriction,
+		StartTS:     now.Unix(),
+		EndTS:       now.Add(24 * time.Hour).Unix(),
+		Priority:    50,
+		Name:        "Test Temporary Restriction",
 		Description: "Temporary no-fly zone for testing",
 		Geometry: Geometry{
 			Polygon: []Point{

@@ -11,12 +11,12 @@ import (
 type FenceType int32
 
 const (
-	FenceTypeUnknown          FenceType = 0
-	FenceTypeTempRestriction  FenceType = 1 // Temporary restriction for events, emergencies
-	FenceTypePermanentNoFly   FenceType = 2 // Permanent no-fly zone
-	FenceTypeAltitudeLimit    FenceType = 3 // Maximum altitude restriction
-	FenceTypeAltitudeMinimum  FenceType = 4 // Minimum altitude requirement
-	FenceTypeSpeedLimit       FenceType = 5 // Speed restriction zone
+	FenceTypeUnknown         FenceType = 0
+	FenceTypeTempRestriction FenceType = 1 // Temporary restriction for events, emergencies
+	FenceTypePermanentNoFly  FenceType = 2 // Permanent no-fly zone
+	FenceTypeAltitudeLimit   FenceType = 3 // Maximum altitude restriction
+	FenceTypeAltitudeMinimum FenceType = 4 // Minimum altitude requirement
+	FenceTypeSpeedLimit      FenceType = 5 // Speed restriction zone
 )
 
 // String returns a human-readable representation of the fence type.
@@ -39,8 +39,8 @@ func (t FenceType) String() string {
 
 // Point represents a single WGS84 coordinate.
 type Point struct {
-	Latitude  float64 `json:"lat"`  // Degrees, -90 to 90
-	Longitude float64 `json:"lon"`  // Degrees, -180 to 180
+	Latitude  float64 `json:"lat"` // Degrees, -90 to 90
+	Longitude float64 `json:"lon"` // Degrees, -180 to 180
 }
 
 // NewPoint creates a new Point with validation.
@@ -87,10 +87,10 @@ type FenceItem struct {
 	ID          string    `json:"id"`
 	Type        FenceType `json:"type"`
 	Geometry    Geometry  `json:"geometry"`
-	StartTS     int64     `json:"start_ts"`     // Unix timestamp in seconds
-	EndTS       int64     `json:"end_ts"`       // Unix timestamp, 0 = no expiry
-	Priority    uint32    `json:"priority"`     // Higher = more important
-	MaxAltitude uint32    `json:"max_alt_m"`    // Max altitude in meters, 0 = no limit
+	StartTS     int64     `json:"start_ts"`      // Unix timestamp in seconds
+	EndTS       int64     `json:"end_ts"`        // Unix timestamp, 0 = no expiry
+	Priority    uint32    `json:"priority"`      // Higher = more important
+	MaxAltitude uint32    `json:"max_alt_m"`     // Max altitude in meters, 0 = no limit
 	MaxSpeed    uint32    `json:"max_speed_mps"` // Max speed in m/s, 0 = no limit
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
@@ -193,25 +193,25 @@ type FenceDelta struct {
 
 // Manifest represents the current state of the geofence database.
 type Manifest struct {
-	Version        uint64 `json:"version"`
-	Timestamp      int64  `json:"timestamp"`
-	RootHash       []byte `json:"root_hash"`
-	DeltaURL       string `json:"delta_url"`
-	SnapshotURL    string `json:"snapshot_url"`
-	DeltaSize      uint64 `json:"delta_size"`
-	SnapshotSize   uint64 `json:"snapshot_size"`
-	DeltaHash      []byte `json:"delta_hash"`
-	SnapshotHash   []byte `json:"snapshot_hash"`
-	MinClientV     uint32 `json:"min_client_version"`
-	Message        string `json:"message"`
-	Signature      []byte `json:"signature"`
-	KeyID          string `json:"key_id"`
+	Version      uint64 `json:"version"`
+	Timestamp    int64  `json:"timestamp"`
+	RootHash     []byte `json:"root_hash"`
+	DeltaURL     string `json:"delta_url"`
+	SnapshotURL  string `json:"snapshot_url"`
+	DeltaSize    uint64 `json:"delta_size"`
+	SnapshotSize uint64 `json:"snapshot_size"`
+	DeltaHash    []byte `json:"delta_hash"`
+	SnapshotHash []byte `json:"snapshot_hash"`
+	MinClientV   uint32 `json:"min_client_version"`
+	Message      string `json:"message"`
+	Signature    []byte `json:"signature"`
+	KeyID        string `json:"key_id"`
 }
 
 // CheckResult represents the result of checking if a location is allowed.
 type CheckResult struct {
-	Allowed      bool        `json:"allowed"`
-	Restriction  *FenceItem  `json:"restriction,omitempty"`
+	Allowed        bool        `json:"allowed"`
+	Restriction    *FenceItem  `json:"restriction,omitempty"`
 	MatchingFences []FenceItem `json:"matching_fences"`
 }
 

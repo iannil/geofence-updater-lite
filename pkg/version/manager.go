@@ -29,11 +29,11 @@ type Manager struct {
 
 // Config is the configuration for the version manager.
 type Config struct {
-	StorePath   string        // Path to the SQLite database
-	PrivateKey  []byte        // Ed25519 private key for signing
-	KeyID       string        // Key ID for the signature
-	OutputDir   string        // Directory for output files
-	CDNBaseURL  string        // Base URL for CDN uploads
+	StorePath  string // Path to the SQLite database
+	PrivateKey []byte // Ed25519 private key for signing
+	KeyID      string // Key ID for the signature
+	OutputDir  string // Directory for output files
+	CDNBaseURL string // Base URL for CDN uploads
 }
 
 // NewManager creates a new version manager.
@@ -56,9 +56,9 @@ func NewManager(ctx context.Context, cfg *Config) (*Manager, error) {
 	}
 
 	mgr := &Manager{
-		store:     store,
-		keyPair:   keyPair,
-		baseDir:   cfg.OutputDir,
+		store:   store,
+		keyPair: keyPair,
+		baseDir: cfg.OutputDir,
 	}
 
 	// Load current version
@@ -109,11 +109,11 @@ func (m *Manager) PublishNewVersion(ctx context.Context, fences []geofence.Fence
 	// Create manifest
 	manifest := &geofence.Manifest{
 		Version:      newVersion,
-		Timestamp:   time.Now().Unix(),
+		Timestamp:    time.Now().Unix(),
 		RootHash:     rootHash[:],
-		SnapshotURL: fmt.Sprintf("/snapshots/v%d.bin", newVersion),
+		SnapshotURL:  fmt.Sprintf("/snapshots/v%d.bin", newVersion),
 		SnapshotSize: uint64(snapshotSize),
-		Message:     fmt.Sprintf("Version %d - %d fences", newVersion, len(fences)),
+		Message:      fmt.Sprintf("Version %d - %d fences", newVersion, len(fences)),
 	}
 
 	// Sign manifest
@@ -189,19 +189,19 @@ func (m *Manager) PublishNewVersion(ctx context.Context, fences []geofence.Fence
 	}
 
 	return &PublishResult{
-		Version:     newVersion,
-		Manifest:    manifest,
+		Version:      newVersion,
+		Manifest:     manifest,
 		SnapshotPath: snapshotPath,
-		DeltaPath:   deltaPath,
+		DeltaPath:    deltaPath,
 	}, nil
 }
 
 // PublishResult contains the results of a publish operation.
 type PublishResult struct {
-	Version     uint64
-	Manifest    *geofence.Manifest
+	Version      uint64
+	Manifest     *geofence.Manifest
 	SnapshotPath string
-	DeltaPath   string
+	DeltaPath    string
 }
 
 // writeManifest writes a manifest to a JSON file.
@@ -309,9 +309,9 @@ func (m *Manager) Sync(ctx context.Context, remoteManifest *geofence.Manifest) (
 
 	if remoteVer <= localVer {
 		return &SyncResult{
-			UpToDate: true,
-		CurrentVersion: localVer,
-			RemoteVersion: remoteVer,
+			UpToDate:       true,
+			CurrentVersion: localVer,
+			RemoteVersion:  remoteVer,
 		}, nil
 	}
 
@@ -320,18 +320,18 @@ func (m *Manager) Sync(ctx context.Context, remoteManifest *geofence.Manifest) (
 	// In a complete implementation, this would download delta or snapshot
 
 	return &SyncResult{
-		UpToDate:      false,
+		UpToDate:       false,
 		CurrentVersion: localVer,
-		RemoteVersion: remoteVer,
+		RemoteVersion:  remoteVer,
 		DeltaAvailable: false,
 	}, nil
 }
 
 // SyncResult contains the result of a sync operation.
 type SyncResult struct {
-	UpToDate      bool
+	UpToDate       bool
 	CurrentVersion uint64
-	RemoteVersion uint64
+	RemoteVersion  uint64
 	DeltaAvailable bool
 }
 

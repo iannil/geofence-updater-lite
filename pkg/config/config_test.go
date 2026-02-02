@@ -15,9 +15,9 @@ func TestClientConfig_Validate(t *testing.T) {
 		{
 			name: "valid config",
 			cfg: &ClientConfig{
-				ManifestURL: "https://example.com/manifest.json",
+				ManifestURL:  "https://example.com/manifest.json",
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-				StorePath:   "/data/geofence.db",
+				StorePath:    "/data/geofence.db",
 			},
 			wantErr: false,
 		},
@@ -25,7 +25,7 @@ func TestClientConfig_Validate(t *testing.T) {
 			name: "missing manifest URL",
 			cfg: &ClientConfig{
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-				StorePath:   "/data/geofence.db",
+				StorePath:    "/data/geofence.db",
 			},
 			wantErr: true,
 		},
@@ -40,7 +40,7 @@ func TestClientConfig_Validate(t *testing.T) {
 		{
 			name: "missing store path",
 			cfg: &ClientConfig{
-				ManifestURL: "https://example.com/manifest.json",
+				ManifestURL:  "https://example.com/manifest.json",
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
 			},
 			wantErr: true,
@@ -59,9 +59,9 @@ func TestClientConfig_Validate(t *testing.T) {
 
 func TestClientConfig_DefaultValues(t *testing.T) {
 	cfg := &ClientConfig{
-		ManifestURL: "https://example.com/manifest.json",
+		ManifestURL:  "https://example.com/manifest.json",
 		PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-		StorePath:   "/data/geofence.db",
+		StorePath:    "/data/geofence.db",
 	}
 
 	cfg.Validate()
@@ -93,8 +93,8 @@ func TestPublisherConfig_Validate(t *testing.T) {
 			name: "valid config",
 			cfg: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				OutputDir:    "./output",
-				CDNBaseURL:   "https://cdn.example.com",
+				OutputDir:     "./output",
+				CDNBaseURL:    "https://cdn.example.com",
 			},
 			wantErr: false,
 		},
@@ -110,7 +110,7 @@ func TestPublisherConfig_Validate(t *testing.T) {
 			name: "missing output dir",
 			cfg: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				CDNBaseURL:   "https://cdn.example.com",
+				CDNBaseURL:    "https://cdn.example.com",
 			},
 			wantErr: true,
 		},
@@ -118,7 +118,7 @@ func TestPublisherConfig_Validate(t *testing.T) {
 			name: "missing CDN base URL",
 			cfg: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				OutputDir:    "./output",
+				OutputDir:     "./output",
 			},
 			wantErr: true,
 		},
@@ -137,8 +137,8 @@ func TestPublisherConfig_Validate(t *testing.T) {
 func TestPublisherConfig_DefaultVersion(t *testing.T) {
 	cfg := &PublisherConfig{
 		PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-		OutputDir:    "./output",
-		CDNBaseURL:   "https://cdn.example.com",
+		OutputDir:     "./output",
+		CDNBaseURL:    "https://cdn.example.com",
 	}
 
 	cfg.Validate()
@@ -155,9 +155,9 @@ func TestConfig_SaveAndLoad(t *testing.T) {
 	cfg := &Config{
 		DataDir: tmpDir,
 		Client: &ClientConfig{
-			ManifestURL: "https://example.com/manifest.json",
+			ManifestURL:  "https://example.com/manifest.json",
 			PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-			StorePath:   "geofence.db",
+			StorePath:    "geofence.db",
 		},
 	}
 
@@ -191,9 +191,9 @@ func TestConfig_Validate(t *testing.T) {
 	t.Run("valid client config", func(t *testing.T) {
 		cfg := &Config{
 			Client: &ClientConfig{
-				ManifestURL: "https://example.com/manifest.json",
+				ManifestURL:  "https://example.com/manifest.json",
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-				StorePath:   "/data/geofence.db",
+				StorePath:    "/data/geofence.db",
 			},
 		}
 		if err := cfg.Validate(); err != nil {
@@ -205,8 +205,8 @@ func TestConfig_Validate(t *testing.T) {
 		cfg := &Config{
 			Publisher: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				OutputDir:    "./output",
-				CDNBaseURL:   "https://cdn.example.com",
+				OutputDir:     "./output",
+				CDNBaseURL:    "https://cdn.example.com",
 			},
 		}
 		if err := cfg.Validate(); err != nil {
@@ -257,9 +257,9 @@ func TestConfig_GetClientStorePath(t *testing.T) {
 		cfg := &Config{
 			DataDir: "/base",
 			Client: &ClientConfig{
-				ManifestURL: "https://example.com/manifest.json",
+				ManifestURL:  "https://example.com/manifest.json",
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-				StorePath:   "custom.db",
+				StorePath:    "custom.db",
 			},
 		}
 		result := cfg.GetClientStorePath()
@@ -272,7 +272,7 @@ func TestConfig_GetClientStorePath(t *testing.T) {
 		cfg := &Config{
 			DataDir: "/base",
 			Client: &ClientConfig{
-				ManifestURL: "https://example.com/manifest.json",
+				ManifestURL:  "https://example.com/manifest.json",
 				PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
 			},
 		}
@@ -289,8 +289,8 @@ func TestConfig_GetPublisherOutputPath(t *testing.T) {
 			DataDir: "/base",
 			Publisher: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				OutputDir:    "custom_output",
-				CDNBaseURL:   "https://cdn.example.com",
+				OutputDir:     "custom_output",
+				CDNBaseURL:    "https://cdn.example.com",
 			},
 		}
 		result := cfg.GetPublisherOutputPath()
@@ -304,7 +304,7 @@ func TestConfig_GetPublisherOutputPath(t *testing.T) {
 			DataDir: "/base",
 			Publisher: &PublisherConfig{
 				PrivateKeyHex: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				CDNBaseURL:   "https://cdn.example.com",
+				CDNBaseURL:    "https://cdn.example.com",
 			},
 		}
 		result := cfg.GetPublisherOutputPath()
@@ -348,9 +348,9 @@ func TestDefaultPublisherConfig(t *testing.T) {
 
 func TestClientConfig_UserAgent(t *testing.T) {
 	cfg := &ClientConfig{
-		ManifestURL: "https://example.com/manifest.json",
+		ManifestURL:  "https://example.com/manifest.json",
 		PublicKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
-		StorePath:   "/data/geofence.db",
+		StorePath:    "/data/geofence.db",
 	}
 
 	cfg.Validate()

@@ -68,17 +68,17 @@ func FenceItemToProto(item *geofence.FenceItem) *pb.FenceItem {
 	}
 
 	pbItem := &pb.FenceItem{
-		Id:              item.ID,
-		Type:            pb.FenceType(item.Type),
-		StartTs:         item.StartTS,
-		EndTs:           item.EndTS,
-		Priority:        item.Priority,
+		Id:                item.ID,
+		Type:              pb.FenceType(item.Type),
+		StartTs:           item.StartTS,
+		EndTs:             item.EndTS,
+		Priority:          item.Priority,
 		MaxAltitudeMeters: item.MaxAltitude,
-		MaxSpeedMps:     item.MaxSpeed,
-		Name:            item.Name,
-		Description:     item.Description,
-		Signature:       item.Signature,
-		KeyId:           item.KeyID,
+		MaxSpeedMps:       item.MaxSpeed,
+		Name:              item.Name,
+		Description:       item.Description,
+		Signature:         item.Signature,
+		KeyId:             item.KeyID,
 	}
 
 	// Convert geometry - create the Geometry message with appropriate shape

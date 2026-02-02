@@ -59,8 +59,8 @@ type Node struct {
 	Left     *Node
 	Right    *Node
 	Leaf     bool
-	LeafID    string   // ID of the fence item if this is a leaf
-	LeafData []byte  // Encoded fence item data
+	LeafID   string // ID of the fence item if this is a leaf
+	LeafData []byte // Encoded fence item data
 }
 
 // Tree represents a Merkle tree of fence items.
@@ -107,7 +107,7 @@ func NewTree(fences []geofence.FenceItem) (*Tree, error) {
 		node := &Node{
 			Hash:     h,
 			Leaf:     true,
-			LeafID:    fence.ID,
+			LeafID:   fence.ID,
 			LeafData: data,
 		}
 		t.leaves[fence.ID] = node

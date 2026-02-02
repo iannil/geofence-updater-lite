@@ -9,13 +9,13 @@ import (
 
 func sampleManifest() *Manifest {
 	return &Manifest{
-		Version:     1,
-		Timestamp:   time.Now().Unix(),
-		DeltaURL:    "/patches/v0_to_v1.bin",
-		SnapshotURL: "/snapshots/v1.bin",
-		DeltaSize:   1024,
+		Version:      1,
+		Timestamp:    time.Now().Unix(),
+		DeltaURL:     "/patches/v0_to_v1.bin",
+		SnapshotURL:  "/snapshots/v1.bin",
+		DeltaSize:    1024,
 		SnapshotSize: 4096,
-		Message:     "Initial release",
+		Message:      "Initial release",
 	}
 }
 
@@ -23,12 +23,12 @@ func sampleFences() []FenceItem {
 	now := time.Now()
 	return []FenceItem{
 		{
-			ID:     "test-temp-001",
-			Type:   FenceTypeTempRestriction,
-			StartTS: now.Unix(),
-			EndTS:   now.Add(24 * time.Hour).Unix(),
-			Priority: 50,
-			Name:     "Test Temporary Restriction",
+			ID:          "test-temp-001",
+			Type:        FenceTypeTempRestriction,
+			StartTS:     now.Unix(),
+			EndTS:       now.Add(24 * time.Hour).Unix(),
+			Priority:    50,
+			Name:        "Test Temporary Restriction",
 			Description: "Temporary no-fly zone for testing",
 			Geometry: Geometry{
 				Polygon: []Point{
@@ -45,12 +45,12 @@ func sampleFences() []FenceItem {
 func temporaryFence() FenceItem {
 	now := time.Now()
 	return FenceItem{
-		ID:     "test-temp-001",
-		Type:   FenceTypeTempRestriction,
-		StartTS: now.Unix(),
-		EndTS:   now.Add(24 * time.Hour).Unix(),
-		Priority: 50,
-		Name:     "Test Temporary Restriction",
+		ID:          "test-temp-001",
+		Type:        FenceTypeTempRestriction,
+		StartTS:     now.Unix(),
+		EndTS:       now.Add(24 * time.Hour).Unix(),
+		Priority:    50,
+		Name:        "Test Temporary Restriction",
 		Description: "Temporary no-fly zone for testing",
 		Geometry: Geometry{
 			Polygon: []Point{
@@ -65,12 +65,12 @@ func temporaryFence() FenceItem {
 
 func permanentNoFlyZone() FenceItem {
 	return FenceItem{
-		ID:     "test-perm-001",
-		Type:   FenceTypePermanentNoFly,
-		StartTS: 0,
-		EndTS:   0,
-		Priority: 100,
-		Name:     "Test Airport No-Fly Zone",
+		ID:          "test-perm-001",
+		Type:        FenceTypePermanentNoFly,
+		StartTS:     0,
+		EndTS:       0,
+		Priority:    100,
+		Name:        "Test Airport No-Fly Zone",
 		Description: "Permanent restriction around airport",
 		Geometry: Geometry{
 			Polygon: []Point{
@@ -85,13 +85,13 @@ func permanentNoFlyZone() FenceItem {
 
 func altitudeLimitFence() FenceItem {
 	return FenceItem{
-		ID:     "test-alt-001",
-		Type:   FenceTypeAltitudeLimit,
-		StartTS: 0,
-		EndTS:   0,
-		Priority: 30,
+		ID:          "test-alt-001",
+		Type:        FenceTypeAltitudeLimit,
+		StartTS:     0,
+		EndTS:       0,
+		Priority:    30,
 		MaxAltitude: 120,
-		Name:     "Test Altitude Limit",
+		Name:        "Test Altitude Limit",
 		Description: "Maximum altitude 120m",
 		Geometry: Geometry{
 			Polygon: []Point{

@@ -137,8 +137,8 @@ func TestMarshalHex(t *testing.T) {
 
 func TestUnmarshalInvalidHex(t *testing.T) {
 	tests := []struct {
-		name    string
-		hex     string
+		name      string
+		hex       string
 		unmarshal func(string) ([]byte, error)
 	}{
 		{"invalid public hex", "not-hex!", UnmarshalPublicKeyHex},
