@@ -4,10 +4,10 @@
 
 <div align="center">
 
-![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)
+![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-68%25-yellow.svg)
 
 **A lightweight, highly reliable geofence data synchronization system**
 
@@ -109,7 +109,7 @@ Geofence-Updater-Lite (GUL) is a decentralized geofence data synchronization sys
 
 ### Prerequisites
 
-- **Go 1.25+** (latest stable version recommended)
+- **Go 1.22+** (1.23 recommended)
 - **Make** (optional, for convenient builds)
 - **Docker** (optional, for containerized deployment)
 
@@ -666,18 +666,32 @@ A: Yes. The SDK continues working with locally cached geofence data and automati
 
 ## Roadmap
 
+### Completed
+
 - [x] Core data structures
 - [x] Ed25519 signature verification
 - [x] Merkle Tree implementation
-- [x] R-Tree spatial indexing
-- [x] Binary delta
-- [x] HTTP sync
-- [x] Publisher tool
-- [x] SDK example
+- [x] R-Tree spatial indexing (SQLite)
+- [x] Binary delta updates
+- [x] Protobuf serialization (for snapshots)
+- [x] HTTP sync with retry logic
+- [x] Publisher CLI tool
+- [x] Go SDK with auto-sync
 - [x] CI/CD pipeline (GitHub Actions)
+- [x] Cross-platform builds (Linux/macOS/Windows)
+
+### In Progress
+
+- [ ] Increase test coverage to 80%+ (current: ~68%)
+- [ ] Performance benchmark suite
+
+### Planned
+
 - [ ] C++ SDK
-- [ ] Performance benchmarks
+- [ ] Polyline coordinate compression
+- [ ] HTTP Range requests (resume downloads)
 - [ ] Web management interface
+- [ ] End-to-end integration tests
 
 ---
 
@@ -714,5 +728,4 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for det
 This project draws inspiration from:
 
 - [Git](https://git-scm.com/) - Merkle Tree version management concept
-- [bsdiff](https://www.daemonology.net/bsdiff/) - Binary diff algorithm
-- [go-polyline](https://github.com/twpayne/go-polyline) - Coordinate compression algorithm
+- [bsdiff](https://www.daemonology.net/bsdiff/) - Binary diff algorithm inspiration

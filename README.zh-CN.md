@@ -4,10 +4,10 @@
 
 <div align="center">
 
-![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)
+![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
-![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-68%25-yellow.svg)
 
 **一个轻量级、高可靠的地理围栏数据同步系统**
 
@@ -109,7 +109,7 @@ Geofence-Updater-Lite (GUL) 是一个去中心化的地理围栏数据同步系�
 
 ### 前置要求
 
-- **Go 1.25+** （推荐使用最新稳定版本）
+- **Go 1.22+** （推荐使用最新稳定版本）
 - **Make** （可选，用于便捷构建）
 - **Docker** （可选，用于容器化部署）
 
@@ -666,18 +666,32 @@ A: 可以。SDK 会使用本地缓存的围栏数据继续工作，网络恢复�
 
 ## 路线图
 
-- [x] 核心数据结构
+### 已完成
+
+- [x] 核心数据结构 (Fence Item, Manifest)
 - [x] Ed25519 签名验证
-- [x] Merkle Tree 实现
-- [x] R-Tree 空间索引
-- [x] 二进制差分
-- [x] HTTP 同步
-- [x] 发布工具
-- [x] SDK 示例
+- [x] Merkle Tree 增量更新
+- [x] R-Tree 空间索引 (SQLite)
+- [x] 二进制差分 (Delta Patch)
+- [x] Protobuf 序列化
+- [x] HTTP 同步客户端
+- [x] 发布工具 CLI
+- [x] SDK 使用示例
 - [x] CI/CD 流水线 (GitHub Actions)
-- [ ] C++ SDK
+
+### 进行中
+
+- [ ] 提升测试覆盖率 (当前 ~68%，目标 80%+)
+- [ ] 端到端测试
 - [ ] 性能基准测试
+
+### 计划中
+
+- [ ] HTTP Range 断点续传
+- [ ] Polyline 坐标压缩
+- [ ] C++ SDK
 - [ ] Web 管理界面
+- [ ] CDN 上传集成 (S3/OSS)
 
 ---
 
@@ -715,4 +729,3 @@ limitations under the License.
 
 - [Git](https://git-scm.com/) - Merkle Tree 版本管理思想
 - [bsdiff](https://www.daemonology.net/bsdiff/) - 二进制差分算法
-- [go-polyline](https://github.com/twpayne/go-polyline) - 坐标压缩算法
